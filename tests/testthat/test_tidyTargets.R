@@ -22,5 +22,11 @@ test_that(
     expect_true(
       target_ests$std_error[1] != target_ests$std_error[2]
     )
+
+    expect_failure(
+      expect_true(
+        abs(target_ests$std_error[30] ) < 1e-1
+      )
+    )
   }
 )

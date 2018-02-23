@@ -38,8 +38,8 @@ test_that(
     library(geex)
     library(inferference)
     my_glm_formula <-  Y | A ~ X1 | group
-    data  <-  vaccinesim
-    data$group <- rep(1:300, each = 10)
+    data  <-  vaccinesim[1:100,]
+    data$group <- rep(1:10, each = 10)
 
 
     model_method <-  'glm'
@@ -81,6 +81,7 @@ test_that(
       # model_method = c("glm", "glmer")[1],
       model_method =  "glm" ,
       deriv_control = geex::setup_deriv_control(method = deriv_method),
+          keep_components = TRUE,
       verbose = interactive(),
       model_options = NULL#list(nAGQ = 5, family = "binomial"),
       # ...
@@ -152,7 +153,7 @@ test_that(
       bssdde1 <- sqrt(mmat1)  # from GEEX
       bssdde1
       glm_fit1$estimates[7, c("estimate", "std_error")]
-      s1 <- glm_fit1$geex_obj_list[[1]]@sandwich_components
+      s1 <- glm_fit1$geex_obj_list[[1]]$sandwich_components
       sbs <- bs@sandwich_components
 
 
@@ -180,10 +181,11 @@ test_that(
       Ss1 <- solve(s1@.A) %*% s1@.B %*% t(solve(s1@.A))
       Ssbs <- solve(sbs@.A) %*% sbs@.B %*% t(solve(sbs@.A))
 
-      glm_fit1$geex_obj_list[[1]]@vcov[me_idx, me_idx]
+      glm_fit1$geex_obj_list[[1]]$vcov[me_idx, me_idx]
       bs@vcov[bs_idx, bs_idx]
+
       expect_equal(
-        glm_fit1$geex_obj_list[[1]]@vcov[me_idx, me_idx],
+        glm_fit1$geex_obj_list[[1]]$vcov[me_idx, me_idx],
         bs@vcov[bs_idx, bs_idx],
         tol=1e-8
       )

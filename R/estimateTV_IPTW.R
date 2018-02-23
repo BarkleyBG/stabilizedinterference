@@ -41,6 +41,9 @@ estimateTV_IPTW <- function(
   verbose <-
     ifelse("verbose" %in% dots_names,
            dots$verbose, FALSE)
+  keep_components <-
+    ifelse("keep_components" %in% dots_names,
+           dots$keep_components, FALSE)
   if (contrast_type != "difference"){stop("contrast_type must be 'difference'")}
   if ("target_grids" %in% dots_names){
     target_grids <- dots$target_grids
@@ -327,7 +330,15 @@ estimateTV_IPTW <- function(
     if (verbose){
       message(paste("done with alpha variance ", alp_num, "of", num_alphas))}
 
-    pop_mean_alphas_list[[alp_num]] <- variance_from_geex
+    pop_mean_alphas_list[[alp_num]] <- list(
+      estimates = variance_from_geex@estimates,
+      vcov = variance_from_geex@vcov
+    )
+    if (keep_components){
+      pop_mean_alphas_list[[alp_num]]$sandwich_components <-
+        variance_from_geex@sandwich_components
+    }
+    # pop_mean_alphas_list[[alp_num]] <- variance_from_geex
   }
 
   ## #' @param pop_means_grid "difference" or others (perhaps, later).
@@ -335,20 +346,20 @@ estimateTV_IPTW <- function(
   ## #' @param num_alphas number of allocations
 
 #
-#   tidy_args <- list(
-#     target_grids = target_grids,
-#     pop_mean_alphas_list = pop_mean_alphas_list,
-#     # num_alphas,
-#     contrast_type = contrast_type
-#   )
-#   saveRDS(tidy_args, file = quickLookup("test_tidyTargets_glm.Rds"))
-
-  target_ests <- tidyTargets(
-    target_grids,
-    pop_mean_alphas_list,
+  tidy_args <- list(
+    target_grids = target_grids,
+    pop_mean_alphas_list = pop_mean_alphas_list,
     # num_alphas,
-    contrast_type
+    contrast_type = contrast_type
   )
+  # saveRDS(tidy_args, file = quickLookup("test_tidyTargets_glm.Rds"))
+
+  target_ests <- do.call(tidyTargets,tidy_args)
+  #   target_grids,
+  #   pop_mean_alphas_list,
+  #   # num_alphas,
+  #   contrast_type
+  # )
 
   output <- list(
     estimates = target_ests,

@@ -23,14 +23,14 @@ tidyTargets <- function(
 
   for (row_num in 1:(NROW(pop_means_grid)) ) {
     # mu_row <- pop_means_grid[row_num, ]
-    geex_obj_alpha <- pop_mean_alphas_list[[pop_means_grid$alpha1_num[row_num] ]]
+    geex_output <- pop_mean_alphas_list[[pop_means_grid$alpha1_num[row_num] ]]
 
     grab_geex_num <-
       getGeexNum(mu_row = pop_means_grid[row_num, ], trt_char= "trt1")
 
     # pop_means_mu_here <- pop_means_alphas[grab_geex_num]
-    estimate <- geex_obj_alpha@estimates[grab_geex_num]
-    variance <- geex_obj_alpha@vcov[grab_geex_num, grab_geex_num]
+    estimate <- geex_output$estimates[grab_geex_num]
+    variance <- geex_output$vcov[grab_geex_num, grab_geex_num]
 
     pop_means_grid$estimate[row_num] <- estimate
     pop_means_grid$variance[row_num] <- variance
@@ -40,8 +40,8 @@ tidyTargets <- function(
   for (row_num in 1:(NROW(effects_grid)) ) {
     # mu_row <- pop_means_grid[row_num, ]
     # if ()
-    geex_obj_alpha1 <- pop_mean_alphas_list[[effects_grid$alpha1_num[row_num] ]]
-    geex_obj_alpha2 <- pop_mean_alphas_list[[effects_grid$alpha2_num[row_num] ]]
+    geex_output1 <- pop_mean_alphas_list[[effects_grid$alpha1_num[row_num] ]]
+    geex_output2 <- pop_mean_alphas_list[[effects_grid$alpha2_num[row_num] ]]
 
     grab_geex_num1 <-
       getGeexNum(mu_row = effects_grid[row_num, ], trt_char= "trt1")
@@ -72,21 +72,30 @@ tidyTargets <- function(
       }
 
     # pop_means_mu_here <- pop_means_alphas[grab_geex_num]
-    estimate1 <- geex_obj_alpha1@estimates[grab_geex_num1]
-    estimate2 <- geex_obj_alpha2@estimates[grab_geex_num2]
-    vcov1 <- geex_obj_alpha1@vcov#[grab_geex_num1, grab_geex_num1]
-    vcov2 <- geex_obj_alpha2@vcov#[grab_geex_num, grab_geex_num]
+    estimate1 <- geex_output1$estimates[grab_geex_num1]
+    estimate2 <- geex_output2$estimates[grab_geex_num2]
+    vcov1 <- geex_output1$vcov#[grab_geex_num1, grab_geex_num1]
+    vcov2 <- geex_output2$vcov#[grab_geex_num, grab_geex_num]
 
     estimate <- contrastThese(
       x1 = estimate1, x2 = estimate2, contrast_type = contrast_type)
 
-    variance <- calcDeltaMethodVariance(
-      vcov1,
-      vcov2,
-      grab_geex_num1,
-      grab_geex_num2,
-      contrast_type
+    delta_args <- list(
+      vcov1 = vcov1,
+      vcov2 = vcov2,
+      grab_geex_num1 = grab_geex_num1,
+      grab_geex_num2 = grab_geex_num2,
+      contrast_type = contrast_type
     )
+
+    variance <- do.call(calcDeltaMethodVariance, delta_args)
+    # variance <- calcDeltaMethodVariance(
+    #   vcov1,
+    #   vcov2,
+    #   grab_geex_num1,
+    #   grab_geex_num2,
+    #   contrast_type
+    # )
 
     effects_grid$estimate[row_num] <- estimate
     effects_grid$variance[row_num] <- variance
