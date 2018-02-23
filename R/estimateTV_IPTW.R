@@ -531,6 +531,26 @@ eeFunTV_IPTW <- function(
         sum0 - mu0,## for mu(0,\alpha)
         (alpha*sum1 + (1-alpha)*sum0) - mu_marg ## for mu( \alpha) marginal
       )
+
+      # score_eqns <- apply(X, 2, function(x) sum((A - rho) * x))
+      #
+      # ce0 <- mean(Y * (A == 0))   / (1 - alpha)
+      # ce1 <- mean(Y * (A == 1)) * IPW / (alpha)
+      # #
+      # c(score_eqns,
+      #   ce0 - theta[p - 1],
+      #   ce1 - theta[p])
+      # out_vec <- c(
+      #   ( mean(pi_ipw_Y*ind_z1)/ (alpha) ) - mu1, ## for mu(1,\alpha)
+      #   ( mean(pi_ipw_Y*ind_z0)/ (1-alpha) ) - mu0, ## for mu(1,\alpha)
+      #   ( mean(pi_ipw_Y) ) - mu_marg    ## for mu( \alpha) marginal
+      # )
+      out_vec <- c(
+        sum( pi_ipw_Y*ind_z1/(alpha) - mu1 ) , ## for mu(1,\alpha)
+        sum( pi_ipw_Y*ind_z0/(1-alpha) - mu0 ) , ## for mu(1,\alpha)
+        sum( pi_ipw_Y - mu_marg )   ## for mu( \alpha) marginal
+      )
+
     } else
       if (weight_type == "Hajek1") {
         ## calculate individual prop scores
