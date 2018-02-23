@@ -106,7 +106,7 @@ test_that(
     L1 <- c(0, 0, 1, 0)
     Sigma <- vcov(bs)
     bssd1 <- sqrt(t(L1) %*% Sigma %*% L1)  # from GEEX
-    tvsd1 <- tv[1,]$std.error # from inferference
+    tvsd1 <- tv$estimates[1,]$std.error # from inferference
     mesd1 <- zz1[1,]$std_error
 
     expect_equal( tvsd1,bssd1, tol=1e-2 , check.attributes = FALSE)
