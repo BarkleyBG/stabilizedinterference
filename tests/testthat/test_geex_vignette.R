@@ -190,6 +190,41 @@ test_that(
         tol=1e-8
       )
 
+      l11 <- c(0,0,1,-1,0)
+      expect_equal(
+        t(l11) %*% vcov(bs) %*% l11,
+        vcov(bs)[5,5],
+        # glm_fit1$geex_obj_list[[1]]$vcov[me_idx, me_idx],
+        # bs@vcov[bs_idx, bs_idx],
+        tol=1e-8,
+        check.attributes = FALSE
+      )
+
+      l11 <- c(0,0,1,-1,0)
+      expect_equal(
+        glm_fit1$estimates$std_error[7],
+        sqrt(vcov(bs)[5,5]),
+        # glm_fit1$geex_obj_list[[1]]$vcov[me_idx, me_idx],
+        # bs@vcov[bs_idx, bs_idx],
+        tol=1e-8,
+        check.attributes = FALSE
+      )
+
+      sigma1 <- glm_fit1$geex_obj_list[[1]]$vcov[me_idx, me_idx]
+      lll1 <- c(1,-1,0,0)
+      myvar1 <- t(lll1) %*% sigma1 %*% lll1
+      expect_equal(
+        myvar1,
+        vcov(bs)[5,5],
+        check.attributes = FALSE,
+        tol=1e-8
+      )
+      expect_equal(
+        sqrt(myvar1),
+        glm_fit1$estimates$std_error[7],
+        check.attributes = FALSE,
+        tol=1e-8
+      )
     #   var1 <- t(c(1,-1,0,0)) %*%
     #      glm_fit1$geex_obj_list[[1]]@vcov[me_idx, me_idx] %*% c(1,-1,0,0)
     #
@@ -363,7 +398,7 @@ test_that(
 
     expect_equal( tvsdde,bssdde, tol=1e-1 , check.attributes = FALSE)
     # expect_failure(
-    expect_equal(bssdde, mesdde, tol=1e-2, check.attributes = FALSE)
+    expect_equal(bssdde, mesdde, tol=1e-7, check.attributes = FALSE)
     # )
 
   }

@@ -38,6 +38,16 @@ tidyTargets <- function(
   }
 
   for (row_num in 1:(NROW(effects_grid)) ) {
+
+    # if (effects_grid$effect[row_num]=="overall" &&
+    #     effects_grid$alpha1[row_num] == 0.35  &&
+    #     effects_grid$alpha2[row_num] == 0.35
+    # ){
+    #
+    #   browser()
+    #   "asdasd"
+    #
+    # }
     # mu_row <- pop_means_grid[row_num, ]
     # if ()
     geex_output1 <- pop_mean_alphas_list[[effects_grid$alpha1_num[row_num] ]]
@@ -87,6 +97,8 @@ tidyTargets <- function(
       grab_geex_num2 = grab_geex_num2,
       contrast_type = contrast_type
     )
+    # saveRDS(delta_args, file = quickLookup("test_delta_args_glm.Rds"))
+
 
     variance <- do.call(calcDeltaMethodVariance, delta_args)
     # variance <- calcDeltaMethodVariance(
@@ -104,6 +116,7 @@ tidyTargets <- function(
 
   full_grid <- rbind(pop_means_grid, effects_grid)
   full_grid$std_error <- sqrt(full_grid$variance)
+  # full_grid$std_error
   full_grid$lcl <- full_grid$estimate - qnorm(0.975)*full_grid$std_error
   full_grid$ucl <- full_grid$estimate + qnorm(0.975)*full_grid$std_error
 
@@ -143,6 +156,24 @@ calcDeltaMethodVariance <- function(
     tolerance = 1e-3) )) {
     stop("why isn't this true?")
   }
+  if (isTRUE(all.equal(vcov1, vcov2))) {
+
+    if (grab_geex_num1==grab_geex_num2){
+      ## overall effect
+      delta_method_variance <- 0
+    } else {
+      ## direct effect
+
+      contrast <- rep(0, NCOL(vcov1))
+
+      contrast <- matrix(0, ncol = 1, nrow = dim_new-1)
+      contrast_vals <- getContrastVals(contrast_type = contrast_type)
+      contrast[grab_geex_num1, ] <- contrast_vals[1] ##aka 1 for diff
+      contrast[grab_geex_num2, ] <- contrast_vals[2] ##aka -1 for diff
+
+      delta_method_variance <- t(contrast) %*% vcov1 %*% contrast
+    }
+  } else {
 
   new_Sigma_mat[-dim_new, -dim_new] <- vcov1
   new_Sigma_mat[ dim_new,  dim_new] <- vcov2[grab_geex_num2, grab_geex_num2]
@@ -155,9 +186,12 @@ calcDeltaMethodVariance <- function(
   contrast <- matrix(0, ncol = 1, nrow = dim_new)
   contrast_vals <- getContrastVals(contrast_type = contrast_type)
   contrast[grab_geex_num1, ] <- contrast_vals[1] ##aka 1 for diff
-  contrast[dim_new-1, ] <- contrast_vals[2] ##aka -1 for diff
+  # contrast[dim_new-1, ] <- contrast_vals[2] ##aka -1 for diff
+  # contrast[dim_new-3 + grab_geex_num2, ] <- contrast_vals[2] ##aka -1 for diff
+  contrast[dim_new, ] <- contrast_vals[2] ##aka -1 for diff
 
   delta_method_variance <- t(contrast) %*% new_Sigma_mat %*% contrast
+  }
   delta_method_variance
 }
 

@@ -59,8 +59,9 @@ liu_names <- c("alpha1", "trt1", "alpha2", "trt2", "estimate", "std_error",
 
 test_that("integration HT-glm works",{
 
+
   data <- inferference::vaccinesim
-  data <- data[1:120,]
+  data <- data[1:1200,]
   gsize <- 5
   data$group <- rep(seq.int(NROW(data)/gsize), each =gsize)
   # data$group <- rep(1:5, each = 10)
@@ -107,17 +108,24 @@ test_that("integration HT-glm works",{
   head(zz2)
   tail(zz1)
   tail(zz2)
-
   expect_equal(
     glm_fit1$estimates$estimate,
-    glm_fit2$estimates$estimate
+    glm_fit2$estimates$estimate,
+    tol = 1e-7
   )
-  expect_failure(
+  # expect_failure(
   expect_equal(
     glm_fit1$estimates$std_error,
-    glm_fit2$estimates$std.error
+    glm_fit2$estimates$std.error,
+    tol = 1e-1 ### different methods
   )
-  )
+
+  adj_se <- (glm_fit2$estimates$std.error - glm_fit1$estimates$std_error) /
+    glm_fit1$estimates$std_error
+
+  adj_se <- na.omit(adj_se)
+  expect_true( all( abs(adj_se)< .25) )
+  # )
 }
 )
 
