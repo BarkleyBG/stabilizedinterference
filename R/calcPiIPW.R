@@ -15,7 +15,7 @@ calcPiIPW <- function(
   randomization_probability, #as in Caro
   ...
 ){
-
+# stop('fix model matrix')
   stopifnot((is.null(alpha) && integrate_alphas)|| length(alpha)==1)
   ## Necessary pieces ##
   # integrand         <- match.fun(integrand_fun)
@@ -25,7 +25,7 @@ calcPiIPW <- function(
   # A                 <- dots[[match.arg('A', dot.names)]]
   stopifnot(integrate_alphas)
 
-  args <- list(
+  ipw_args <- list(
     treatment = treatment,
     # participation = participation, ##will this be a problem?
     model_matrix = model_matrix,
@@ -36,23 +36,23 @@ calcPiIPW <- function(
     # alpha = ifelse(integrate_alphas,alpha,treatment)
   )
 
-  if (integrate_alphas) { args$alpha <- alpha } else {args$alpha <- treatment}
+  if (integrate_alphas) { ipw_args$alpha <- alpha } else {ipw_args$alpha <- treatment}
 
   if ( is.null(sigma) ) {
     ## GLM
-    args$raneff <- NA
-    down_weight <- do.call(logitIntegrandFun, args)
+    ipw_args$raneff <- NA
+    down_weight <- do.call(logitIntegrandFun, ipw_args)
 
   } else {
     ## glmer
 
-    args$lower <- -5*sigma ##bounds for raneff or "b" random intercept
-    args$upper <- 5*sigma
+    ipw_args$lower <- -5*sigma ##bounds for raneff or "b" random intercept
+    ipw_args$upper <- 5*sigma
 
-    args$f <- logitIntegrandFun
+    ipw_args$f <- logitIntegrandFun
 
 
-    logit_integral <- try(do.call(stats::integrate, args = args), silent = TRUE)
+    logit_integral <- try(do.call(stats::integrate, args = ipw_args), silent = TRUE)
 
     if ( is(logit_integral, 'try-error') ) {
       down_weight <- NA

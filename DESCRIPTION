@@ -1,7 +1,7 @@
 Package: stabilizedinterference
 Type: Package
 Title: Stabilized IPW Estimators for Causal Effects with Interference
-Version: 0.0.1
+Version: 0.0.2
 Authors@R: c(
     person("Brian", "Barkley", email = "BarkleyBG@unc.edu", 
     role = c("cre", 'aut')))

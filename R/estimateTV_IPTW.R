@@ -282,6 +282,10 @@ estimateTV_IPTW <- function(
 
   if (verbose){message('starting variance calcs')}
 
+
+  # new_data <- data[names(data)%in%var_names]
+  # new_data$model_mat <-
+  #   split(ps_model_matrix , f = 1:NROW(new_data), drop = FALSE)
   ## variance estimates
 
   pop_mean_alphas_list <- list()
@@ -296,6 +300,7 @@ estimateTV_IPTW <- function(
       estFUN = eeFunTV_IPTW,
       ##geex
       data = data,
+      # data = new_data,
       units = var_names$grouping,
       compute_roots = compute_roots,
       roots = theta_hat,
@@ -312,6 +317,7 @@ estimateTV_IPTW <- function(
         var_names = var_names,
         alpha = alpha,
         integrate_alphas = integrate_alphas,
+        x_levels = geex::grab(from = trt_model_obj, "design_levels"),
         randomization_probability  = randomization_probability,
         weight_type = weight_type
 
@@ -392,7 +398,7 @@ estimateTV_IPTW <- function(
 #' @param trt_model_obj The fitted model object (usually a glm).
 #' @param outcome_var_name The name of the column in the dataframe indicating outcome of interest
 #' @inheritParams estimateTV_IPTW
-#' @param calcFunTVIPTW this is a function object specified in the weight_type argument
+#' @param x_levels default NULL unless there are factos in design matrix.
 #'
 #' @export
 eeFunTV_IPTW <- function(
@@ -401,6 +407,7 @@ eeFunTV_IPTW <- function(
   num_fixefs,
   var_names,
   alpha,
+  x_levels = NULL,
   integrate_alphas ,#= integrate_allocations,
   randomization_probability ,#= randomization_probability,
   weight_type ##HT, Hajek1, Hajek2
@@ -408,14 +415,15 @@ eeFunTV_IPTW <- function(
   # calcFunTVIPTW
 ){
 
-  ## Put this at the end
-  closureModel <- geex::grab_psiFUN(data=data,object = trt_model_obj)
+
 
   # if ( "glm" %in% class(trt_model_obj) ){
     model_matrix <- geex::grab_design_matrix(
       geex::grab_fixed_formula(trt_model_obj),
-      data = data)
-
+      data = data,
+      xlev = x_levels
+    )
+  # model_matrix <- do.call(rbind, data$model_mat)
     # model_matrix <- stats::model.matrix(trt_model_obj$formula, data = data)
   # } else
   #   if ("glmerMod" %in% class(trt_model_obj) ) {
@@ -426,7 +434,12 @@ eeFunTV_IPTW <- function(
       #   )
       # geex::gra
     # }
-
+    ## Put this at the end
+    closureModel <- geex::grab_psiFUN(
+      data=data,
+      object = trt_model_obj,
+      xlev = x_levels
+    )
   ## Or perhaps re-do data to be a split list with these pre-specified.
 
   # # treatment <- stats::model.response(stats::model.frame(trt_model_obj$formula, data = data))
