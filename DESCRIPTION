@@ -3,9 +3,8 @@ Type: Package
 Title: Stabilized IPW Estimators for Causal Effects with Interference
 Version: 0.0.2
 Authors@R: c(
-    person("Brian", "Barkley", email = "BarkleyBG@unc.edu", 
+    person("Brian", "Barkley", email = "BarkleyBG@outlook.com", 
     role = c("cre", 'aut')))
-Maintainer: The package maintainer <yourself@somewhere.net>
 Description: Implements the stabilized IPTW estimators for causal effects in  
     the presence of interference as introduced by Liu, Hudgens, and 
     Becker-Dreps (2016) Biometrika. These estimators are the Hajek-like analogue
@@ -15,7 +14,9 @@ License: GPL-3
 Encoding: UTF-8
 LazyData: true
 Imports: 
-    geex
+    geex,
+    Formula,
+    lme4
 Suggests: 
     testthat,
     rprojroot,

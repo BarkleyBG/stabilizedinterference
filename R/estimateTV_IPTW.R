@@ -10,6 +10,7 @@
 #' @param model_method currently only supported "logistic" for logit-link binomial GLM.
 #' @param weight_type Currently only supports "unstabilized"
 #' @param ... additional args
+#' @param model_options passed to \code{\link[lme4]{glmer}} or perhaps glm(in future).
 #' @param alphas the range of allocations or policies from 0 to 1.
 #'
 #' @export
@@ -395,10 +396,18 @@ estimateTV_IPTW <- function(
 #'
 #' This function is to be passed into geex::m_estimate
 #'
-#' @param trt_model_obj The fitted model object (usually a glm).
-#' @param outcome_var_name The name of the column in the dataframe indicating outcome of interest
 #' @inheritParams estimateTV_IPTW
-#' @param x_levels default NULL unless there are factos in design matrix.
+#' @param alpha One of the allocations at a time
+#' @param num_fixefs Number of fixed effect parameters from treatment model.
+#'   Perhaps unncessaary coding.
+#' @param var_names A list of names for outcome, treatment, clustering, and
+#'   perhaps participation.
+#' @param trt_model_obj The fitted model object (usually a glm).
+#' @param x_levels default NULL unless there are factos in design matrix. From
+#'   \code{\link[geex]{grab_design_levels}}.
+#' @param randomization_probability usually 1. e.g. 2/3  in Perez-Heydrich et
+#'   al. (2014) Biometrics
+#' @param integrate_alphas true
 #'
 #' @export
 eeFunTV_IPTW <- function(
@@ -420,8 +429,9 @@ eeFunTV_IPTW <- function(
   # if ( "glm" %in% class(trt_model_obj) ){
     model_matrix <- geex::grab_design_matrix(
       geex::grab_fixed_formula(trt_model_obj),
-      data = data,
-      xlev = x_levels
+      # rhs_formula = trt_model_obj,
+      xlev = x_levels,
+      data = data
     )
   # model_matrix <- do.call(rbind, data$model_mat)
     # model_matrix <- stats::model.matrix(trt_model_obj$formula, data = data)

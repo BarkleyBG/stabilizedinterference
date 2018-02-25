@@ -1,13 +1,13 @@
+
+#' Take geex'd variance output and turn it into a tidy grid of target estimates
+#'
+#' @inheritParams getContrastVals
 #' @param pop_mean_alphas_list looped geex output
 #' @param target_grids output from \code{\link{makeTargetGrids}}
-#' @param contrast_type "difference" or others (perhaps, later).
+#'
 tidyTargets <- function(
-  # target_grid,
-  # pop_means_grid,
-  # effects_grid,
   target_grids,
   pop_mean_alphas_list,
-  # num_alphas,
   contrast_type ## will eventually be phased into makeTargetGrids
 ){
   pop_means_grid <- target_grids$pop_means
@@ -117,8 +117,8 @@ tidyTargets <- function(
   full_grid <- rbind(pop_means_grid, effects_grid)
   full_grid$std_error <- sqrt(full_grid$variance)
   # full_grid$std_error
-  full_grid$lcl <- full_grid$estimate - qnorm(0.975)*full_grid$std_error
-  full_grid$ucl <- full_grid$estimate + qnorm(0.975)*full_grid$std_error
+  full_grid$lcl <- full_grid$estimate - stats::qnorm(0.975)*full_grid$std_error
+  full_grid$ucl <- full_grid$estimate + stats::qnorm(0.975)*full_grid$std_error
 
   grid_names <- names(full_grid)
   new_names <- c(grid_names[! grid_names %in% c("alpha1_num", "alpha2_num")],
@@ -133,6 +133,7 @@ tidyTargets <- function(
 
 #' Calculates the estimate and variance for causal effects
 #'
+#' @inheritParams getContrastVals
 #' @param vcov1 the vcov matrix for first population mean
 #' @param vcov2 the vcov matrix for second population mean
 #' @param grab_geex_num1 the correct from of vcov1
@@ -220,6 +221,11 @@ getGeexNum <- function(mu_row, trt_char) {
 
 
 
+#' Returns a contrast matrix's values
+#'
+#' For \code{\link{calcDeltaMethodVariance}}
+#'
+#' @param contrast_type e.g. "difference" or "negative risk ratio"
 getContrastVals <- function(contrast_type){
   # g(x_1, x_2)
   if (contrast_type=="difference"){
@@ -227,11 +233,11 @@ getContrastVals <- function(contrast_type){
   } else
     if (contrast_type == "ratio"){
       stop("not implemented")
-      out <- c(1/x_2, -x_1/(x_2^2)) ## not sure how this works
+      # out <- c(1/x_2, -x_1/(x_2^2)) ## not sure how this works
     } else
       if (contrast_type == "negative ratio"){
         stop("not implemented")
-        out <- c(-1/x_2, x_1/(x_2^2)) ## not sure how this works
+        # out <- c(-1/x_2, x_1/(x_2^2)) ## not sure how this works
       } else
         if (contrast_type == "odds ratio") {
           stop("not implemented")
@@ -240,6 +246,13 @@ getContrastVals <- function(contrast_type){
   out
 }
 
+#' Plumber for defining a contrast matrix
+#'
+#' For \code{\link{calcDeltaMethodVariance}}.
+#'
+#' @inheritParams getContrastVals
+#' @param x1 first value
+#' @param x2 second value
 contrastThese <- function(x1, x2, contrast_type){
   if (contrast_type=="difference"){
     out <- x1 - x2

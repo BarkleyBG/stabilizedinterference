@@ -2,13 +2,13 @@
 #' Makes a dataframe "grid" of estimands to estimate
 #'
 #' This function can be called prior to and then passed into
-#' \code{\link{estimateTV_ITPW}} informally by specifying \code{target_grids =
+#' \code{\link{estimateTV_IPTW}} informally by specifying \code{target_grids =
 #' makeTargetGrids(alphas = c(0.4,0.5))} via the \code{\link{...}} argument.
 #'
 #' @inheritParams estimateTV_IPTW
 #' @param treatments defaults to \code{0:1} as in TV2012
 #'
-#' @seealso \code{\link[inferference]{effect_grid}}
+#' @seealso The \code{effect_grid} function in the  inferference package
 #'
 #' @return a list of pop_means and effects grids
 #' @export

@@ -54,7 +54,7 @@ calcPiIPW <- function(
 
     logit_integral <- try(do.call(stats::integrate, args = ipw_args), silent = TRUE)
 
-    if ( is(logit_integral, 'try-error') ) {
+    if ( 'try-error' %in% class(logit_integral) ) {
       down_weight <- NA
     } else {
       down_weight <- logit_integral$value
