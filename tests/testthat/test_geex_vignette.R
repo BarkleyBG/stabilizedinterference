@@ -7,7 +7,7 @@ context("test_geex_vignette")
 test_that(
   "I can reproduce geex vignette, with extra DE",
   {
-    eefun <- function(data, model, alpha){
+    eefun <- function(data, model, alpha1, alpha2){
       X <- model.matrix(model, data = data)
       A <- model.response(model.frame(model, data = data))
       Y <- data$Y
@@ -18,17 +18,24 @@ test_that(
         lp  <- X %*% theta[1:p1]
         rho <- plogis(lp)
 
-        hh  <- ((rho/alpha)^A * ((1-rho)/(1-alpha))^(1 - A))
-        IPW <- 1/(exp(sum(log(hh))))
+        hh1  <- ((rho/alpha1)^A * ((1-rho)/(1-alpha1))^(1 - A))
+        IPW1 <- 1/(exp(sum(log(hh1))))
+        hh2  <- ((rho/alpha2)^A * ((1-rho)/(1-alpha2))^(1 - A))
+        IPW2 <- 1/(exp(sum(log(hh2))))
 
         score_eqns <- apply(X, 2, function(x) sum((A - rho) * x))
-        ce0 <- mean(Y * (A == 0)) * IPW / (1 - alpha)
-        ce1 <- mean(Y * (A == 1)) * IPW / (alpha)
-
+        ce01 <- mean(Y * (A == 0)) * IPW1 / (1 - alpha1)
+        ce11 <- mean(Y * (A == 1)) * IPW1 / (alpha1)
+        ce02 <- mean(Y * (A == 0)) * IPW2 / (1 - alpha2)
+        ce12 <- mean(Y * (A == 1)) * IPW2 / (alpha2)
         c(score_eqns,
-          ce0 - theta[p - 2],
-          ce1 - theta[p-1],
-          (ce1-ce0) - theta[p]
+          ce01 - theta[p - 5],
+          ce11 - theta[p-4],
+          (ce11-ce01) - theta[p-3],
+
+          ce02 - theta[p - 2],
+          ce12 - theta[p-1],
+          (ce12-ce02) - theta[p]
           )
       }
     }
@@ -64,8 +71,10 @@ test_that(
       estFUN = eefun,
       data  = data,
       units = 'group',
-      root_control = setup_root_control(start = c(coef(mglm), .4,  .13,.120)),
-      outer_args = list(alpha = allocations[1], model = mglm),
+      root_control = setup_root_control(start = c(
+        coef(mglm), .4,  .13,.120 ,  .35,  .10,.1)),
+      outer_args = list(alpha1 = allocations[1],
+                        alpha2 = allocations[2], model = mglm),
       deriv_control = geex::setup_deriv_control(method = deriv_method)
 
     )
@@ -75,7 +84,7 @@ test_that(
     glm_fit1 <- estimateTV_IPTW(
       data = data,
       formula = my_glm_formula,
-      alphas = allocations,
+      alphas = allocations[1:2],
       weight_type = "HT",
       # weight_type = c("HT", "Hajek1", "Hajek2")[3],
       # model_method = c("glm", "glmer")[1],
@@ -87,7 +96,8 @@ test_that(
       # ...
     )
 
-    roots(bs)
+    roots(bs)[c(3,6,4,7,5,8)]
+    (vcov(bs) %>% diag())[c(3,6,4,7,5,8)] %>% sqrt
     # direct_effect(tv, allocation = .35)$estimate
     zz1 <- glm_fit1$estimates
     zz1[9,]$estimate
@@ -143,7 +153,7 @@ test_that(
 #     # )
 
 
-      LDE1 <- c(0, 0, -1, 1,0)
+      LDE1 <- c(0, 0, -1, 1,0, 0,0,0)
       LDE1%*%roots(bs)
       roots(bs)[5]
       Sigma <- vcov(bs)
@@ -190,7 +200,7 @@ test_that(
         tol=1e-8
       )
 
-      l11 <- c(0,0,1,-1,0)
+      l11 <- c(0,0,1,-1,0, 0,0,0)
       expect_equal(
         t(l11) %*% vcov(bs) %*% l11,
         vcov(bs)[5,5],
