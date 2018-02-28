@@ -103,6 +103,56 @@ test_that(
     zz1[9,]$estimate
     # zz1[zz1$alpha1 ==allocations[1] & zz1$trt1 ==1 & zz1$trt2==0, ]
 
+    # me_idx <- c(1,2,7,8)
+    me_idx <- c(1,2, 4,5, 7,8)
+    bs_idx <- c(4,3, 7,6,1,2)
+    expect_equal(
+      glm_fit1$geex_obj@estimates[me_idx],#,, me_idx],
+      bs@estimates[bs_idx],#, bs_idx],
+      tol=1e-8,
+      check.attributes = FALSE
+    )
+    expect_equal(
+      glm_fit1$geex_obj@vcov[me_idx, me_idx],
+      bs@vcov[bs_idx, bs_idx],
+      tol=1e-7
+    )
+
+    l11 <- c(0,0,1,-1,0, 0,0,0)
+    expect_equal(
+      t(l11) %*% vcov(bs) %*% l11,
+      vcov(bs)[5,5],
+      # glm_fit1$geex_obj$vcov[me_idx, me_idx],
+      # bs@vcov[bs_idx, bs_idx],
+      tol=1e-8,
+      check.attributes = FALSE
+    )
+
+    l11 <- c(0,0,1,-1,0)
+    expect_equal(
+      glm_fit1$estimates$std_error[7],
+      sqrt(vcov(bs)[5,5]),
+      # glm_fit1$geex_obj$vcov[me_idx, me_idx],
+      # bs@vcov[bs_idx, bs_idx],
+      tol=1e-8,
+      check.attributes = FALSE
+    )
+
+    sigma1 <- glm_fit1$geex_obj@vcov#[me_idx, me_idx]
+    lll1 <- c(1,-1,0, 0,0,0, 0,0)
+    myvar1 <- t(lll1) %*% sigma1 %*% lll1
+    expect_equal(
+      myvar1,
+      vcov(bs)[5,5],
+      check.attributes = FALSE,
+      tol=1e-8
+    )
+    expect_equal(
+      sqrt(myvar1),
+      glm_fit1$estimates$std_error[7],
+      check.attributes = FALSE,
+      tol=1e-8
+    )
 
 #
 #     ####### Y1
@@ -153,90 +203,50 @@ test_that(
 #     # )
 
 
-      LDE1 <- c(0, 0, -1, 1,0, 0,0,0)
-      LDE1%*%roots(bs)
-      roots(bs)[5]
-      Sigma <- vcov(bs)
-      # Sigma[4,5] <- 1
-      # Sigma[5,4] <- 1
-      mmat1 <- t(LDE1) %*% Sigma %*% LDE1
-      bssdde1 <- sqrt(mmat1)  # from GEEX
-      bssdde1
-      glm_fit1$estimates[7, c("estimate", "std_error")]
-      s1 <- glm_fit1$geex_obj_list[[1]]$sandwich_components
-      sbs <- bs@sandwich_components
+      # LDE1 <- c(0, 0, -1, 1,0, 0,0,0)
+      # LDE1%*%roots(bs)
+      # roots(bs)[5]
+      # Sigma <- vcov(bs)
+      # # Sigma[4,5] <- 1
+      # # Sigma[5,4] <- 1
+      # mmat1 <- t(LDE1) %*% Sigma %*% LDE1
+      # bssdde1 <- sqrt(mmat1)  # from GEEX
+      # bssdde1
+      # glm_fit1$estimates[7, c("estimate", "std_error")]
+      # s1 <- glm_fit1$geex_obj$sandwich_components
+      # sbs <- bs@sandwich_components
 
 
-      me_idx <- c(1,2,4,5)
-      bs_idx <- c(4,3,1,2)
+      # me_idx <- c(1,2,4,5)
+      # bs_idx <- c(4,3,1,2)
 
-      s1@.A_i[[1]]
-      sbs@.A_i[[1]]
-      s1@.B_i[[1]][me_idx,me_idx]
-      sbs@.B_i[[1]][bs_idx, bs_idx]
-      s1@.A_i[[1]][me_idx,me_idx]
-      sbs@.A_i[[1]][bs_idx, bs_idx]
-      s1@.A[me_idx,me_idx]
-      sbs@.A[bs_idx, bs_idx]
+      # s1@.A_i[[1]]
+      # sbs@.A_i[[1]]
+      # s1@.B_i[[1]][me_idx,me_idx]
+      # sbs@.B_i[[1]][bs_idx, bs_idx]
+      # s1@.A_i[[1]][me_idx,me_idx]
+      # sbs@.A_i[[1]][bs_idx, bs_idx]
+      # s1@.A[me_idx,me_idx]
+      # sbs@.A[bs_idx, bs_idx]
 
-      solve(s1@.A)[me_idx,me_idx]
-      solve(sbs@.A)[bs_idx, bs_idx]
-      s1@.B[me_idx,me_idx]
-      sbs@.B[bs_idx, bs_idx]
+      # solve(s1@.A)[me_idx,me_idx]
+      # solve(sbs@.A)[bs_idx, bs_idx]
+      # s1@.B[me_idx,me_idx]
+      # sbs@.B[bs_idx, bs_idx]
+      #
+      #
+      # (solve(s1@.A) %*% s1@.B)[me_idx,me_idx]
+      # (solve(sbs@.A) %*% sbs@.B)[bs_idx, bs_idx]
+
+      # Ss1 <- solve(s1@.A) %*% s1@.B %*% t(solve(s1@.A))
+      # Ssbs <- solve(sbs@.A) %*% sbs@.B %*% t(solve(sbs@.A))
+
+      # glm_fit1$geex_obj@vcov[me_idx, me_idx]
+      # bs@vcov[bs_idx, bs_idx]
 
 
-      (solve(s1@.A) %*% s1@.B)[me_idx,me_idx]
-      (solve(sbs@.A) %*% sbs@.B)[bs_idx, bs_idx]
-
-      Ss1 <- solve(s1@.A) %*% s1@.B %*% t(solve(s1@.A))
-      Ssbs <- solve(sbs@.A) %*% sbs@.B %*% t(solve(sbs@.A))
-
-      glm_fit1$geex_obj_list[[1]]$vcov[me_idx, me_idx]
-      bs@vcov[bs_idx, bs_idx]
-
-      expect_equal(
-        glm_fit1$geex_obj_list[[1]]$vcov[me_idx, me_idx],
-        bs@vcov[bs_idx, bs_idx],
-        tol=1e-8
-      )
-
-      l11 <- c(0,0,1,-1,0, 0,0,0)
-      expect_equal(
-        t(l11) %*% vcov(bs) %*% l11,
-        vcov(bs)[5,5],
-        # glm_fit1$geex_obj_list[[1]]$vcov[me_idx, me_idx],
-        # bs@vcov[bs_idx, bs_idx],
-        tol=1e-8,
-        check.attributes = FALSE
-      )
-
-      l11 <- c(0,0,1,-1,0)
-      expect_equal(
-        glm_fit1$estimates$std_error[7],
-        sqrt(vcov(bs)[5,5]),
-        # glm_fit1$geex_obj_list[[1]]$vcov[me_idx, me_idx],
-        # bs@vcov[bs_idx, bs_idx],
-        tol=1e-8,
-        check.attributes = FALSE
-      )
-
-      sigma1 <- glm_fit1$geex_obj_list[[1]]$vcov[me_idx, me_idx]
-      lll1 <- c(1,-1,0,0)
-      myvar1 <- t(lll1) %*% sigma1 %*% lll1
-      expect_equal(
-        myvar1,
-        vcov(bs)[5,5],
-        check.attributes = FALSE,
-        tol=1e-8
-      )
-      expect_equal(
-        sqrt(myvar1),
-        glm_fit1$estimates$std_error[7],
-        check.attributes = FALSE,
-        tol=1e-8
-      )
     #   var1 <- t(c(1,-1,0,0)) %*%
-    #      glm_fit1$geex_obj_list[[1]]@vcov[me_idx, me_idx] %*% c(1,-1,0,0)
+    #      glm_fit1$geex_obj@vcov[me_idx, me_idx] %*% c(1,-1,0,0)
     #
     #   sd1 <- sqrt(var1)
     #
@@ -256,10 +266,10 @@ test_that(
     #
     #
     # # bsb1 <- bs@sandwich_components@.B_i[[1]]
-    # # meb1 <- glm_fit1$geex_obj_list[[1]]@sandwich_components@.B_i[[1]]
+    # # meb1 <- glm_fit1$geex_obj@sandwich_components@.B_i[[1]]
     # #
     # # bsa1 <- bs@sandwich_components@.A_i[[1]]
-    # # mea1 <- glm_fit1$geex_obj_list[[1]]@sandwich_components@.A_i[[1]]
+    # # mea1 <- glm_fit1$geex_obj@sandwich_components@.A_i[[1]]
     # #
     # # ssme1 <- t(mea1) %*% meb1 %*% mea1
     # # ssbs1 <- t(bsa1) %*% bsb1 %*% bsa1

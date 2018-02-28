@@ -2,6 +2,7 @@
 
 S3method(coef,ipw_interference)
 S3method(print,ipw_interference)
+export(eeFunCombined)
 export(eeFunTV_IPTW)
 export(estimateTV_IPTW)
 export(makeTargetGrids)

@@ -32,31 +32,31 @@ print.ipw_interference <- function(x,...){
 
 
 
-#' #' Prints small amount of output from a ipw_interference_ests object
-#' #'
-#' #' @param x object of class "ipw_interference_ests"
-#' #' @param ... dots
-#' #'
-#' #' @method print ipw_interference_ests
-#' #'
-#' #' @export
-#' print.ipw_interference_ests <- function(x,...){
-#'   stopifnot(class(x) == "ipw_interference_ests")
-#'
-#'   ests <- x#$estimates
-#'   good_names <- c("alpha1", "trt1", "alpha2", "trt2", "estimate", "std_error")
-#'
-#'   cat("--- estimates ---- \n")
-#'   # cat(head(x[,good_names]))
-#'   # cat(utils::tail(x[,good_names]))
-#'   print(ests[1:min(7, NROW(ests)), good_names], row.names = FALSE, digits = 3)
-#'   if (NROW(ests)>7){
-#'     cat("     ...        ...      \n")
-#'     ests2 <- ests[(ests$effect_type != 'outcome' &
-#'                     (ests$alpha1 > ests$alpha2)), good_names]
-#'     print(ests2[utils::tail(seq.int(NROW(ests2))), ],row.names = FALSE, digits = 3)
-#'   }
-#' }
+#  #' Prints small amount of output from a ipw_interference_ests object
+#  #'
+#  #' @param x object of class "ipw_interference_ests"
+#  #' @param ... dots
+#  #'
+#  #' @method print ipw_interference_ests
+#  #'
+#  #' @export
+#  print.ipw_interference_ests <- function(x,...){
+#    stopifnot(class(x) == "ipw_interference_ests")
+#
+#    ests <- x#$estimates
+#    good_names <- c("alpha1", "trt1", "alpha2", "trt2", "estimate", "std_error")
+#
+#    cat("--- estimates ---- \n")
+#    # cat(head(x[,good_names]))
+#    # cat(utils::tail(x[,good_names]))
+#    print(ests[1:min(7, NROW(ests)), good_names], row.names = FALSE, digits = 3)
+#    if (NROW(ests)>7){
+#      cat("     ...        ...      \n")
+#      ests2 <- ests[(ests$effect_type != 'outcome' &
+#                      (ests$alpha1 > ests$alpha2)), good_names]
+#      print(ests2[utils::tail(seq.int(NROW(ests2))), ],row.names = FALSE, digits = 3)
+#    }
+#  }
 
 
 #' Returns the model coefficients from ipw_interference object

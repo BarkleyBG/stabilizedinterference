@@ -7,7 +7,23 @@
 makeTargetGrids(alphas, treatments = c(0, 1))
 }
 \arguments{
-\item{alphas}{the range of allocations or policies from 0 to 1.}
+\item{alphas}{the range of allocations or policies from 0 to 1.
+
+  When \code{model_method == "oracle"} then \code{model_options} must be a
+  list with named numeric vectors \code{fixefs} and \code{var_comp}. See
+  \code{\link{prepareOracle}}. For mixed effect model, note that that random
+  intercept's term in the modeling formula (e.g., \code{ ( 1 | cluster_ID )
+  }) must be omitted from \code{formula}.
+
+  Arguments that can be passed through \code{...} include: \itemize{ \item
+  \code{integrate_alphas}. Not yet supported. \item \code{verbose}. Set to
+  \code{TRUE} for more verbose messaging. Default \code{FALSE}. \item
+  \code{contrast_type}. Not yet supported. \item \code{keep_components}. Set
+  to \code{TRUE} for more verbose output. Default \code{FALSE}. \item
+  \code{target_grids}. User can supply target estimands with
+  \code{makeTargetGrids}. \item \code{deriv_control}. User can supply the
+  \code{deriv_control} argument to \code{\link[geex]{m_estimate}} with
+  \code{\link[geex]{setup_deriv_control}}. }}
 
 \item{treatments}{defaults to \code{0:1} as in TV2012}
 }

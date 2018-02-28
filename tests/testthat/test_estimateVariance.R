@@ -72,6 +72,8 @@ test_that("estimateVariance with 2 alphas", {
   # var_args$alphas <- var_args$alphas[1]
   # var_args$num_alphas <- 1
   # var_args$mu_alphas_ests <-   var_args$mu_alphas_ests[[1]]
+
+  var_args$x_levels <- geex::grab_design_levels(var_args$trt_model_obj)
   my_var_combined <- do.call(estimateVarianceCombined, var_args)
   #
   all.equal( ##scores

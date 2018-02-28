@@ -1,5 +1,7 @@
 
-
+#' Helper function for \code{\link{tidyTargetsCombined}}
+#'
+#' @param trt either 1, 0, or NA. The value of \eqn{z} in \eqn{\mu(z,\alpha)}.
 trtIdx <- function(trt){
   if (is.na(trt)){return(3)};   if (trt==0){return(2)};   if (trt==1){return(1)}
 }
@@ -9,6 +11,8 @@ trtIdx <- function(trt){
 #' @inheritParams getContrastVals
 #' @param pop_mean_alphas_list looped geex output
 #' @param target_grids output from \code{\link{makeTargetGrids}}
+#' @param alpha_grid estimates and variance estimates for the pop means
+#' @param geex_output from \code{\link[geex]{m_estimate}}.
 #'
 tidyTargetsCombined <- function(
   target_grids,

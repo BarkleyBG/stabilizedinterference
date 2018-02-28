@@ -1,4 +1,17 @@
 
+#' Estimates the variance
+#'
+#' somethinhg
+#'
+#' @inheritParams estimateTV_IPTW
+#' @inheritParams getModel
+#' @param num_fixefs etc
+#'
+#' asd
+#'
+#'
+#'
+#' etc
 estimateVarianceCombined <- function(
   alphas,
   num_alphas,
@@ -10,6 +23,7 @@ estimateVarianceCombined <- function(
   num_fixefs,
   fixefs,
   sigma,
+  x_levels,
   trt_model_obj,
 
 
@@ -38,19 +52,27 @@ estimateVarianceCombined <- function(
   #   split(ps_model_matrix , f = 1:NROW(new_data), drop = FALSE)
   ## variance estimates
 
-  mu_alpha_array <- array(
-    NA,
-    dim = c(
-      length(unique(data[[var_names$grouping]])),
-      3,
-      num_alphas
-    )
-  )
+  # mu_alpha_array <- array(
+  #   NA,
+  #   dim = c(
+  #     length(unique(data[[var_names$grouping]])),
+  #     3,
+  #     num_alphas
+  #   )
+  # )
+  if (any(c("lm", "glm", "glmerMod") %in% class(trt_model_obj))){
+    theta_hat <- c(unlist(mu_alphas_ests), fixefs, sigma)
 
-  theta_hat <- c(unlist(mu_alphas_ests), fixefs, sigma)
+  } else
+    if (
+      length(class(trt_model_obj))==1 &&
+      class(trt_model_obj) == "list" ) {
+      # if (model_method == "oracle"){
+      theta_hat <- c(unlist(mu_alphas_ests))#, fixefs, sigma)
+
+    }
 
   average_treatment <-  mean(data[[var_names$treatment]])
-
 
   geex_args_alphas <- list(
     estFUN = eeFunCombined,
@@ -73,7 +95,7 @@ estimateVarianceCombined <- function(
       alphas = alphas,
       num_alphas = num_alphas,
       integrate_alphas = integrate_alphas,
-      x_levels = geex::grab(from = trt_model_obj, "design_levels"),
+      x_levels = x_levels,
       randomization_probability  = randomization_probability,
       weight_type = weight_type,
       average_treatment = average_treatment
@@ -81,6 +103,14 @@ estimateVarianceCombined <- function(
 
     )
   )
+
+  if (!any(c("lm", "glm", "glmerMod") %in% class(trt_model_obj)) &&
+      length(class(trt_model_obj))==1 &&
+      class(trt_model_obj) == "list" ) {
+  # if (model_method == "oracle"){
+    geex_args_alphas$outer_args$oracle_fixefs <- fixefs
+    geex_args_alphas$outer_args$oracle_sigma <- sigma
+  }
   if (!is.null(deriv_control)){
     geex_args_alphas$deriv_control <- deriv_control
   }
@@ -129,11 +159,12 @@ estimateVarianceCombined <- function(
 #'
 #' @inheritParams estimateTV_IPTW
 #' @inheritParams estimateVarianceCombined
+#' @inheritParams getModel
 #' @param num_fixefs Number of fixed effect parameters from treatment model.
 #'   Perhaps unncessaary coding.
+#' @param num_alphas Number of alphas. Perhaps unnecessary.
 #' @param var_names A list of names for outcome, treatment, clustering, and
 #'   perhaps participation.
-#' @param trt_model_obj The fitted model object (usually a glm).
 #' @param x_levels default NULL unless there are factos in design matrix. From
 #'   \code{\link[geex]{grab_design_levels}}.
 #' @param randomization_probability usually 1. e.g. 2/3  in Perez-Heydrich et
@@ -149,15 +180,19 @@ eeFunCombined <- function(
   var_names,
   alphas,
   num_alphas,
-  x_levels = NULL,
+  x_levels,
   integrate_alphas ,#= integrate_allocations,
   randomization_probability ,#= randomization_probability,
   weight_type, ##HT, Hajek1, Hajek2
-  average_treatment
+  average_treatment,
+  oracle_fixefs = NULL,
+  oracle_sigma = NULL
 ){
 
 
-
+  # dots <- list(...)
+  model_class <- class(trt_model_obj)
+ if (any(c("lm", "glm", "glmerMod") %in% model_class)) {
   # if ( "glm" %in% class(trt_model_obj) ){
   model_matrix <- geex::grab_design_matrix(
     geex::grab_fixed_formula(trt_model_obj),
@@ -166,12 +201,28 @@ eeFunCombined <- function(
     data = data
   )
 
-  ## Put this at the end
-  closureModel <- geex::grab_psiFUN(
-    data=data,
-    object = trt_model_obj,
-    xlev = x_levels
-  )
+    ## Put this at the end
+    closureModel <- geex::grab_psiFUN(
+      data = data,
+      object = trt_model_obj,
+      xlev = x_levels
+    )
+ } else
+   if ( length(model_class)==1 && model_class == "list" ) {
+
+   # if (length(class(trt_model_obj))==1 && class(trt_model_obj)=="list"){
+   closureModel <- function(x){NULL}
+   model_matrix <- geex::grab_design_matrix(
+     trt_model_obj$modeling_formula,
+     # rhs_formula = trt_model_obj,
+     xlev = x_levels,
+     data = data
+   )
+   fixefs <- oracle_fixefs
+   sigma <- oracle_sigma
+
+ }  else {stop("model_class not recognized")}
+
   ## Or perhaps re-do data to be a split list with these pre-specified.
 
   # # treatment <- stats::model.response(stats::model.frame(trt_model_obj$formula, data = data))
@@ -186,22 +237,21 @@ eeFunCombined <- function(
   ## Estimating function for IPTW (unstabilized)
   closureTV_IPTW <- function(theta){
 
-    # mu_list <- list()
-    # for (ii in 1:num_alphas){
-    #   mu_list[[ii]] <- theta[ (ii-1)*3 + (1:3)]
-    # }
-    # mu1 <- theta[1]
-    # mu0 <- theta[2]
-    # mu_marg <- theta[3]
-    fixefs <- theta[(3*num_alphas)+(1:num_fixefs)]
-    if ("glmerMod" %in% class(trt_model_obj) ) {
-      sigma <- theta[ (3*num_alphas) +num_fixefs]
+    if (any(c("lm", "glm", "glmerMod") %in% model_class)) {
+
+      fixefs <- theta[(3*num_alphas)+(1:num_fixefs)]
+      if ("glmerMod" %in% class(trt_model_obj) ) {
+        sigma <- theta[ (3*num_alphas) +num_fixefs]
+      } else
+        if ( "lm" %in% class(trt_model_obj) ) {
+          sigma <- NULL
+        } else {
+          stop("treatment model type not recognized")
+        }
     } else
-      if ( "glm" %in% class(trt_model_obj) ) {
-        sigma <- NULL
-      } else {
-        stop("treatment model type not recognized")
-      }
+      if ( length(model_class)==1 && model_class == "list" ) {
+      ##nothing
+    }
 
     pi_ipw_basic <- calcPiIPW(
       # logit_integrand_fun,

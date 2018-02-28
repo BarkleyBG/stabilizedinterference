@@ -1,25 +1,55 @@
 
-#
 #' Estimate ATE with IPTW
-#   #'
+#'
 #' Fits a parametric model and estimates ATE via IPTW with Wald-type confidence
 #' intervals from the empirical sandwich standard error estimates.
 #'
-#' @param formula Three-part formula: Outcome | Treatment ~ model_predictors | cluster_ID. Will be coerced to object of type Formula.
+#' @param formula Multi-part formula: \code{Outcome | Treatment ~
+#'   model_predictors | cluster_ID}. This will be coerced to object of type
+#'   \code{\link[Formula]{Formula}}. When using \code{model_method = "glmer"},
+#'   then the random intercept term is supplied in the style preferred by
+#'   \code{lme4}'s \code{merMod}: e.g., \code{Outcome | Treatment ~
+#'   model_predictors + ( 1 | cluster_ID ) | cluster_ID}.
 #' @param data the dataframe. Will be coerced from "tbl_df" to data.frame.
-#' @param model_method currently only supported "logistic" for logit-link binomial GLM.
-#' @param weight_type Currently only supports "unstabilized"
-#' @param ... additional args
-#' @param model_options passed to \code{\link[lme4]{glmer}} or perhaps glm(in future).
+#' @param model_method \code{"glm"} for logistic, \code{"glmer"} for logistic
+#'   with single random intercept. \code{"oracle"} supported; see
+#'   \code{\link[inferference]{interference}} for syntax.
+#' @param weight_type Estimators as presented in Liu, Hudgens, and Becker-Dreps
+#'   (2016) Biometrika. Select \code{"HT"} for unstabilized weights. Select
+#'   \code{"Hajek1"} or \code{"Hajek2"} for stabilized weights. Select
+#'   \code{"HT_TV"} for the estimators presented in Tchetgen Tchetgen and
+#'   VanderWeele (2012) SMMR and Perez-Heydrich et al. (2014) Biometrics, which
+#'   in general target estimands different from those in Liu, Hudgens, and
+#'   Becker-Dreps (2016) Biometrika.
+#' @param ... additional args. See details.
+#' @param model_options passed to \code{\link[lme4]{glmer}} or perhaps glm(in
+#'   future).
 #' @param alphas the range of allocations or policies from 0 to 1.
+#'
+#'   When \code{model_method == "oracle"} then \code{model_options} must be a
+#'   list with named numeric vectors \code{fixefs} and \code{var_comp}. See
+#'   \code{\link{prepareOracle}}. For mixed effect model, note that that random
+#'   intercept's term in the modeling formula (e.g., \code{ ( 1 | cluster_ID )
+#'   }) must be omitted from \code{formula}.
+#'
+#'   Arguments that can be passed through \code{...} include: \itemize{ \item
+#'   \code{integrate_alphas}. Not yet supported. \item \code{verbose}. Set to
+#'   \code{TRUE} for more verbose messaging. Default \code{FALSE}. \item
+#'   \code{contrast_type}. Not yet supported. \item \code{keep_components}. Set
+#'   to \code{TRUE} for more verbose output. Default \code{FALSE}. \item
+#'   \code{target_grids}. User can supply target estimands with
+#'   \code{makeTargetGrids}. \item \code{deriv_control}. User can supply the
+#'   \code{deriv_control} argument to \code{\link[geex]{m_estimate}} with
+#'   \code{\link[geex]{setup_deriv_control}}. }
+#'
 #'
 #' @export
 estimateTV_IPTW <- function(
   data,
   formula,
   alphas,
-  weight_type  = c("HT", "Hajek1", "Hajek2")[3],
-  model_method  = c("glm", "glmer")[2],
+  weight_type  = c("HT", "Hajek1", "Hajek2", "HT_TV")[3],
+  model_method  = c("glm", "glmer", "oracle")[2],
   model_options = list(nAGQ = 5, family = "binomial"),
   ...
 ){
@@ -30,9 +60,10 @@ estimateTV_IPTW <- function(
   randomization_probability <-
     ifelse("randomization_probability" %in% dots_names,
            dots$randomization_probability, 1)
-  compute_roots <-
-    ifelse("compute_roots" %in% dots_names,
-           dots$compute_roots, FALSE)
+  compute_roots <- FALSE
+  # compute_roots <-
+  #   ifelse("compute_roots" %in% dots_names,
+  #          dots$compute_roots, FALSE)
   integrate_alphas <-
     ifelse("integrate_alphas" %in% dots_names,
            dots$integrate_alphas, TRUE)
@@ -65,7 +96,8 @@ estimateTV_IPTW <- function(
     )
   }
   stopifnot(
-    length(weight_type)==1 && weight_type %in% c("HT", "Hajek1", "Hajek2"))
+    length(weight_type)==1 &&
+      weight_type %in% c("HT", "Hajek1", "Hajek2"))#, "HT_TV"))
 
 
   ## tibbles not allowed
@@ -118,55 +150,31 @@ estimateTV_IPTW <- function(
   alphas <- sort(alphas)
   stopifnot(all(alphas>=0) & all(alphas<=1))
 
-  ## Fit GLM model
-  if (model_method == "glm") {
-    trt_model_obj  <- stats::glm(
-      formula = modeling_formula,
-      data = data,
-      family = stats::binomial()
-    )
-    # treatment_vector <- stats::model.response(stats::model.frame(
-    #   trt_model_obj$formula, data = data))
-    # stopifnot(all(treatment_vector == data[[treatment_var_name]]))
+  ## Fitting treatment model (or getting oracle estimates)
+  trt_model_obj <- fitModel(
+    data = data,
+    modeling_formula = modeling_formula,
+    model_options = model_options,
+    model_method = model_method
+  )
 
+  model_info <- getModel(trt_model_obj = trt_model_obj, data = data)
 
-    fixefs <- trt_model_obj$coefficients
-    sigma <- NULL
-
-    ##perhaps instructive?
-    ps_model_matrix <- stats::model.matrix(trt_model_obj$formula,data = data)
-    treatment_param_ests <- trt_model_obj$coefficients
-    prob_treated <- stats::plogis(ps_model_matrix %*% treatment_param_ests)
-
-  } else
-    if ( model_method == "glmer") {
-
-      model_options$data <- data
-      model_options$formula <- modeling_formula
-      # model_options$family <- "binomial"
-
-      trt_model_obj <- do.call(lme4::glmer, model_options)
-
-      fixefs <- lme4::getME(trt_model_obj, "beta")
-      sigma <- lme4::getME(trt_model_obj, "theta")
-      ps_model_matrix <- lme4::getME(trt_model_obj, "X")
-      # model_matrix_Z <- lme4::getME(trt_model_obj, "Z") ##for later
-
-    } else {
-      stop("only model_method='glm' or 'glmer' implemented")
-    }
-
-  pi_ipw_alphas <- list()
-  mu_alphas_ests <- list()
-
+  fixefs <- model_info$fixefs
+  sigma <- model_info$sigma
+  ps_model_matrix <- model_info$ps_model_matrix
+  x_levels <- model_info$x_levels
+  # trt_model_obj <- model_fit$trt_model_obj
 
   num_fixefs <- length(fixefs)
   num_alphas <- length(alphas)
 
+  pi_ipw_alphas <- list()
+  mu_alphas_ests <- list()
+
+  ## Getting point estimates - - needs cleanup
   for(alp_num in 1:num_alphas) {
     alpha <- alphas[alp_num]
-    # }
-
 
 
     pi_ipw_vec <- rep(NA, num_groups)
@@ -269,40 +277,68 @@ estimateTV_IPTW <- function(
   cluster_propensity_scores <- pi_ipw_alphas
   ## make a way to get out the raw CPS's
 
-  # stop("make IPW ests")
-  # cluster_propensity_scores <- calcPiIPW(
-  #   ##stuff
-  # )
-  # IPTWs <- calcFunTVIPTW(
-  #   outcome = outcome_vector,
-  #   treatment = treatment_vector,
-  #   prob_treated = prob_treated
-  # )
-  # estimated_delta <- mean(IPTWs)
-  # theta_hat <- c(stats::coef(trt_model_obj), estimated_delta)
 
-  var_args <- list(
-    alphas =   alphas,
-    num_alphas =   num_alphas,
-    mu_alphas_ests =   mu_alphas_ests,
-    data =   data,
-    num_fixefs =   num_fixefs,
-    fixefs =   fixefs,
-    sigma = sigma,
-    trt_model_obj = trt_model_obj,
-    var_names = var_names,
-    target_grids =   target_grids,
-    # pop_mean_alphas_list =   # pop_mean_alphas_list,
-    randomization_probability = randomization_probability,
-    weight_type = weight_type,
-    verbose = verbose,
+  # if (model_method != "oracle") {
+    ## Prep for variance
+    var_args <- list(
+      alphas =   alphas,
+      num_alphas =   num_alphas,
+      mu_alphas_ests =   mu_alphas_ests,
+      data =   data,
+      num_fixefs =   num_fixefs,
+      fixefs =   fixefs,
+      sigma = sigma,
+      x_levels = x_levels,
+      trt_model_obj = trt_model_obj,
+      var_names = var_names,
+      target_grids =   target_grids,
+      # pop_mean_alphas_list =   # pop_mean_alphas_list,
+      randomization_probability = randomization_probability,
+      weight_type = weight_type,
+      verbose = verbose,
 
-    keep_components = keep_components,
-    compute_roots = compute_roots,
-    integrate_alphas =   integrate_alphas,
-    deriv_control = deriv_control,
-    contrast_type =   contrast_type
-  )
+      keep_components = keep_components,
+      compute_roots = compute_roots,
+      integrate_alphas =   integrate_alphas,
+      deriv_control = deriv_control,
+      contrast_type =   contrast_type
+    )
+
+
+    var_list <- do.call(estimateVarianceCombined, var_args)
+    target_ests <- var_list$target_ests
+  # } else {
+  #
+  #     ## Prep for variance
+  #     var_args <- list(
+  #       alphas =   alphas,
+  #       num_alphas =   num_alphas,
+  #       mu_alphas_ests =   mu_alphas_ests,
+  #       data =   data,
+  #       num_fixefs =   num_fixefs,
+  #       fixefs =   fixefs,
+  #       sigma = sigma,
+  #       trt_model_obj = trt_model_obj,
+  #       var_names = var_names,
+  #       target_grids =   target_grids,
+  #       # pop_mean_alphas_list =   # pop_mean_alphas_list,
+  #       randomization_probability = randomization_probability,
+  #       weight_type = weight_type,
+  #       verbose = verbose,
+  #
+  #       keep_components = keep_components,
+  #       compute_roots = compute_roots,
+  #       integrate_alphas =   integrate_alphas,
+  #       deriv_control = deriv_control,
+  #       contrast_type =   contrast_type
+  #     )
+  #
+  #
+  #     var_list <- do.call(estimateVarianceCombined, var_args)
+  #     target_ests <- var_list$target_ests
+  #
+  # }
+
   # saveRDS(var_args, file = quickLookup("var_args.Rds"))
 
   # var_list <- do.call(estimateVarianceByAlpha, var_args)
@@ -334,9 +370,6 @@ estimateTV_IPTW <- function(
   #     model = modeling_formula
   #   )
   # )
-
-  var_list <- do.call(estimateVarianceCombined, var_args)
-  target_ests <- var_list$target_ests
 
   output <- list(
     estimates = target_ests,
