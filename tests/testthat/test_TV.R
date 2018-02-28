@@ -108,23 +108,75 @@ test_that("integration HT-glm works",{
   head(zz2)
   tail(zz1)
   tail(zz2)
+
   expect_equal(
-    glm_fit1$estimates$estimate,
-    glm_fit2$estimates$estimate,
+    glm_fit1$estimates[1:6, ]$estimate,
+    glm_fit2$estimates[c(3,1,5,4,2,6), ]$estimate,
     tol = 1e-7
   )
+
   # expect_failure(
   expect_equal(
-    glm_fit1$estimates$std_error,
-    glm_fit2$estimates$std.error,
-    tol = 1e-1 ### different methods
+    glm_fit1$estimates[1:6, ]$std_error,
+    glm_fit2$estimates[c(3,1,5,4,2,6), ]$std.error,
+    tol = 1e-3 ### different methods
   )
 
-  adj_se <- (glm_fit2$estimates$std.error - glm_fit1$estimates$std_error) /
-    glm_fit1$estimates$std_error
 
-  adj_se <- na.omit(adj_se)
-  expect_true( all( abs(adj_se)< .25) )
+
+  # expect_equal(
+  #   glm_fit1$estimates[c(7,8) , ]$estimate,
+  #   glm_fit2$estimates[c(7, 8, 17,19, 22, 23, 29,30), 1:7]$estimate,
+  #   tol = 1e-7
+  # )
+  #
+  #
+  # expect_equal(
+  #   glm_fit1$estimates[12, ],#$estimate,
+  #   glm_fit2$estimates[12, ],#$estimate,
+  #   tol = 1e-7,
+  #   check.attributes = FALSE
+  # )
+
+  expect_equal(
+    glm_fit1$estimates[7:30, ]$estimate,
+    glm_fit2$estimates[7:30, ]$estimate,
+    tol = 1e-7,
+    check.attributes = FALSE
+  )
+  expect_equal(
+    glm_fit1$estimates[7:30, ]$std_error,
+    glm_fit2$estimates[7:30, ]$std.error,
+    tol = 1e-3,
+    check.attributes = FALSE
+  )
+  expect_equal(
+    glm_fit1$estimates[7:30, ]$lcl,
+    glm_fit2$estimates[7:30, ]$conf.low,
+    tol = 5*1e-3,
+    check.attributes = FALSE
+  )
+  expect_equal(
+    glm_fit1$estimates[7:30, ]$ucl,
+    glm_fit2$estimates[7:30, ]$conf.high,
+    tol = 5*1e-3,
+    check.attributes = FALSE
+  )
+
+
+#
+#   # expect_failure(
+#   expect_equal(
+#     glm_fit1$estimates[1:6, ]$std_error,
+#     glm_fit2$estimates[c(3,1,5,4,2,6), ]$std.error,
+#     tol = 1e-3 ### different methods
+#   )
+#
+#   adj_se <- (glm_fit2$estimates$std.error - glm_fit1$estimates$std_error) /
+#     glm_fit1$estimates$std_error
+#
+#   adj_se <- na.omit(adj_se)
+#   expect_true( all( abs(adj_se)< .25) )
   # )
 }
 )

@@ -368,7 +368,7 @@ test_that(
     ### ests
     tvy1 <- tv$estimates[1,]
     bsy1 <- roots(bs)[3]
-    mey1 <- zz1[1,]
+    mey1 <- zz1[2,]
 
     expect_equal( tvy1$estimate, bsy1, tol=1e-7 , check.attributes = FALSE)
     expect_equal( tvy1$estimate, mey1$estimate, tol=1e-7 , check.attributes = FALSE)
@@ -379,7 +379,7 @@ test_that(
     Sigma <- vcov(bs)
     bssd1 <- sqrt(t(L1) %*% Sigma %*% L1)  # from GEEX
     tvsd1 <- tv$estimates[1,]$std.error # from inferference
-    mesd1 <- zz1[1,]$std_error
+    mesd1 <- zz1[2,]$std_error
 
     expect_equal( tvsd1,bssd1, tol=1e-2 , check.attributes = FALSE)
     # expect_failure(

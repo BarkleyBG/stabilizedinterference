@@ -281,43 +281,62 @@ estimateTV_IPTW <- function(
   # estimated_delta <- mean(IPTWs)
   # theta_hat <- c(stats::coef(trt_model_obj), estimated_delta)
 
-  var_list <- estimateVariance(
-    alphas,
-    num_alphas,
+  var_args <- list(
+    alphas =   alphas,
+    num_alphas =   num_alphas,
+    mu_alphas_ests =   mu_alphas_ests,
+    data =   data,
+    num_fixefs =   num_fixefs,
+    fixefs =   fixefs,
+    sigma = sigma,
+    trt_model_obj = trt_model_obj,
+    var_names = var_names,
+    target_grids =   target_grids,
+    # pop_mean_alphas_list =   # pop_mean_alphas_list,
+    randomization_probability = randomization_probability,
+    weight_type = weight_type,
+    verbose = verbose,
 
-    mu_alphas_ests,
-
-    data,
-
-    num_fixefs,
-    fixefs,
-    sigma,
-    trt_model_obj,
-
-
-    var_names,
-    target_grids,
-    # pop_mean_alphas_list,
-    randomization_probability,
-    weight_type,
-
-    verbose,
-
-    keep_components,
-    compute_roots,
-    integrate_alphas,
-    deriv_control,
-    contrast_type
+    keep_components = keep_components,
+    compute_roots = compute_roots,
+    integrate_alphas =   integrate_alphas,
+    deriv_control = deriv_control,
+    contrast_type =   contrast_type
   )
-  target_ests <- var_list$target_ests
-  pop_mean_alphas_list <- var_list$pop_mean_alphas_list
+  # saveRDS(var_args, file = quickLookup("var_args.Rds"))
 
-
-  #   target_grids,
-  #   pop_mean_alphas_list,
-  #   # num_alphas,
-  #   contrast_type
+  # var_list <- do.call(estimateVarianceByAlpha, var_args)
+  # # var_list <- do.call(estimateVarianceCombined, var_args)
+  # target_ests <- var_list$target_ests
+  # pop_mean_alphas_list <- var_list$pop_mean_alphas_list
+  #
+  #
+  # #   target_grids,
+  # #   pop_mean_alphas_list,
+  # #   # num_alphas,
+  # #   contrast_type
+  # # )
+  #
+  # output <- list(
+  #   estimates = target_ests,
+  #   prop_scores = cluster_propensity_scores,
+  #   models = list(
+  #     propensity_model = trt_model_obj
+  #   ),
+  #   geex_obj_list = pop_mean_alphas_list,
+  #   misc = list(
+  #     randomization_probability = randomization_probability,
+  #     integrate_alphas = integrate_alphas,
+  #     contrast_type = contrast_type
+  #   ),
+  #   formulas = list(
+  #     full = formula,
+  #     model = modeling_formula
+  #   )
   # )
+
+  var_list <- do.call(estimateVarianceCombined, var_args)
+  target_ests <- var_list$target_ests
 
   output <- list(
     estimates = target_ests,
@@ -325,7 +344,7 @@ estimateTV_IPTW <- function(
     models = list(
       propensity_model = trt_model_obj
     ),
-    geex_obj_list = pop_mean_alphas_list,
+    geex_obj = var_list$geex_object,
     misc = list(
       randomization_probability = randomization_probability,
       integrate_alphas = integrate_alphas,

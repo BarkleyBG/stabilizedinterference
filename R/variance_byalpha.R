@@ -1,5 +1,5 @@
 
-estimateVariance <- function(
+estimateVarianceByAlpha <- function(
   alphas,
   num_alphas,
 
@@ -28,6 +28,7 @@ estimateVariance <- function(
   contrast_type
 ){
 
+  # average_treatment <-  mean(data[[var_names$treatment]])
 
   if (verbose){message('starting variance calcs')}
 
@@ -45,6 +46,7 @@ estimateVariance <- function(
 
     alpha <- alphas[alp_num]
     # }
+    # if (compute_roots){theta_hat <- NULL}
     geex_args_alpha <- list(
       estFUN = eeFunTV_IPTW,
       ##geex
@@ -69,6 +71,7 @@ estimateVariance <- function(
         x_levels = geex::grab(from = trt_model_obj, "design_levels"),
         randomization_probability  = randomization_probability,
         weight_type = weight_type
+        # average_treatment = average_treatment
 
 
       )
@@ -149,6 +152,7 @@ eeFunTV_IPTW <- function(
   integrate_alphas ,#= integrate_allocations,
   randomization_probability ,#= randomization_probability,
   weight_type ##HT, Hajek1, Hajek2
+  # average_treatment
   # outcome_var_name,
   # calcFunTVIPTW
 ){
@@ -190,6 +194,12 @@ eeFunTV_IPTW <- function(
   ind_z1 <- treatment==1
   ind_z0 <- treatment==0
 
+
+  # sum_trt <- sum(treatment)
+  # clust_size <- length(treatment)
+
+
+
   ## Estimating function for IPTW (unstabilized)
   closureTV_IPTW <- function(theta){
 
@@ -200,57 +210,18 @@ eeFunTV_IPTW <- function(
     if ("glmerMod" %in% class(trt_model_obj) ) {
       sigma <- theta[4+num_fixefs]
 
-      # pi_ipw <- stats::integrate(
-      #   fun = logit_integrand_fun,
-      #   lower = -5*sigma,
-      #   upper = 5*sigma,
-      #   fixefs = fixefs,
-      #   treatment = treatment,
-      #   participation = participation, ##perhaps NULL,
-      #   model_matrix = model_matrix,
-      #   alpha = alpha
-      # )
-      #
-      # pi_ipw <- calcPiIPW(
-      #   # logit_integrand_fun,
-      #   fixefs = fixefs,
-      #   treatment = treatment,
-      #   sigma = sigma, ## perhaps NULL
-      #   participation = participation,
-      #   model_matrix = model_matrix,
-      #   integrate_alphas = integrate_alphas,
-      #   randomization_probability = randomization_probability,
-      #   alpha = alpha
-      # )
     } else
       if ( "glm" %in% class(trt_model_obj) ) {
 
 
-
-        #
         sigma <- NULL
-        # pi_ipw <-   ## make calcPiIPW funtion that handles this switch?
-        #   # stats::integrate(
-        #   # fun =
-        #   logit_integrand_fun(
-        #     # lower = -5*sigma,
-        #     # upper = 5*sigma,
-        #     fixefs = fixefs,
-        #     treatment = treatment,
-        #     participation = participation,## NULL,
-        #     model_matrix = model_matrix,
-        #     alpha = alpha,
-        #     # integrate_alphas = TRUE,
-        #     randomization_probability = randomization_probability
-        #   )
-        # # linear_predictor  <- model_matrix %*% fixefs
-        # prob_treated <- stats::plogis(linear_predictor)
 
       } else {
         stop("treatment model type not recognized")
       }
 
-    pi_ipw <- calcPiIPW(
+
+    ipw_args <- list(
       # logit_integrand_fun,
       fixefs = fixefs,
       treatment = treatment,
@@ -261,53 +232,30 @@ eeFunTV_IPTW <- function(
       randomization_probability = randomization_probability,
       alpha = alpha
     )
-    # warning("did you get the logit_integrand fun reciprocal IPW right?")
-    # # num_params  <- length(theta)
-    # # num_model_params <- length(coef(trt_model_obj)) ##num_params-1
-    # linear_predictor  <- model_matrix %*% theta[-num_params]
-    # prob_treated <- stats::plogis(linear_predictor)
 
-    # if (weight_type == "unstabilized") {
-    ## Y*A/PS - Y*(1-A)/(1-PS)
-    # IPTWs <-
-    #   calcFunTVIPTW(
-    #     # unstabilizedIPTW(
-    #     outcome = outcome,
-    #     treatment = treatment,
-    #     prob_treated = prob_treated
-    #   )
-    # # } else {
-    # #   stop("weight_type == 'unstabilized' only implemented. Not stabilized yet")
-    # # }
-    #
-    # IPTWs - theta[num_params]
+    # saveRDS(ipw_args, file = quickLookup("calcIPW_avgtrt_args.Rds"))
+    # ipw_args$alpha <- average_treatment
+    # pi_ipw_basic <- do.call(calcPiIPW, ipw_args)
+    # alpha_here <- alpha
+    # alpha_ratio <- alpha_here/average_treatment
+    # alpha_inv_ratio <- (1-alpha_here)/(1-average_treatment)
+    # pi_ratio <- (alpha_ratio)^(sum_trt)*(alpha_inv_ratio)^(clust_size - sum_trt)
+    # pi_ipw <- pi_ratio*pi_ipw_basic
+
+    pi_ipw <- do.call(calcPiIPW, ipw_args)
+
     if (weight_type == "HT") {
       pi_ipw_Y <- outcome*pi_ipw
 
-      # c(
-      #   # sum( pi_ipw_Y * () )
-      # )
-      sum1 <- sum( pi_ipw_Y[ind_z1] )/alpha
-      sum0 <- sum( pi_ipw_Y[ind_z0] )/(1-alpha)
-      out_vec <- c(
-        sum1 - mu1, ## for mu(1,\alpha)
-        sum0 - mu0,## for mu(0,\alpha)
-        (alpha*sum1 + (1-alpha)*sum0) - mu_marg ## for mu( \alpha) marginal
-      )
 
-      # score_eqns <- apply(X, 2, function(x) sum((A - rho) * x))
-      #
-      # ce0 <- mean(Y * (A == 0))   / (1 - alpha)
-      # ce1 <- mean(Y * (A == 1)) * IPW / (alpha)
-      # #
-      # c(score_eqns,
-      #   ce0 - theta[p - 1],
-      #   ce1 - theta[p])
+      # sum1 <- sum( pi_ipw_Y[ind_z1] )/alpha
+      # sum0 <- sum( pi_ipw_Y[ind_z0] )/(1-alpha)
       # out_vec <- c(
-      #   ( mean(pi_ipw_Y*ind_z1)/ (alpha) ) - mu1, ## for mu(1,\alpha)
-      #   ( mean(pi_ipw_Y*ind_z0)/ (1-alpha) ) - mu0, ## for mu(1,\alpha)
-      #   ( mean(pi_ipw_Y) ) - mu_marg    ## for mu( \alpha) marginal
+      #   sum1 - mu1, ## for mu(1,\alpha)
+      #   sum0 - mu0,## for mu(0,\alpha)
+      #   (alpha*sum1 + (1-alpha)*sum0) - mu_marg ## for mu( \alpha) marginal
       # )
+
       out_vec <- c(
         sum( pi_ipw_Y*ind_z1/(alpha) - mu1 ) , ## for mu(1,\alpha)
         sum( pi_ipw_Y*ind_z0/(1-alpha) - mu0 ) , ## for mu(1,\alpha)
@@ -346,29 +294,12 @@ eeFunTV_IPTW <- function(
       } else
         if (weight_type == "Hajek2") {
 
-          # sum_ipw_1 <- sum(ind_z1)*pi_ipw/alpha
-          # sum_ipw_0 <- sum(ind_z0)*pi_ipw/(1-alpha)
-          # # sum_ipw_1 <- sum(pi_ipw[ind_z1])
-          # # sum_ipw_0 <- sum(pi_ipw[ind_z0])
-          # denom_mat[gg_num, ] <-
-          #   c(sum_ipw_1, sum_ipw_0, alpha*sum_ipw_1 + (1-alpha)*sum_ipw_0)
-          #
-
-          # out_vec <-  c(
-          #   (outcome[ind_z1] - mu1) * pi_ipw[ind_z1]/alpha,
-          #   (outcome[ind_z0] - mu0) * pi_ipw[ind_z0]/(1-alpha),
-          #   (outcome - mu_marg) * pi_ipw
-          # )
           out_vec <-  c(
             sum(outcome[ind_z1] - mu1) * pi_ipw/alpha,
             sum(outcome[ind_z0] - mu0) * pi_ipw/(1-alpha),
             sum(outcome - mu_marg) * pi_ipw
           )
         }
-    # sum_Y_Pi_IPW1 <- sum(outcome * (treatment==1)* pi_ipw )
-    # sum_Y_Pi_IPW0 <- sum(outcome * (treatment==1)* pi_ipw )
-    # sum_Y_Pi_IPW1 <- sum(outcome * (treatment==1)* pi_ipw )
-
     out_vec
   }
 
