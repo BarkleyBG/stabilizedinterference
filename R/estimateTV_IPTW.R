@@ -60,10 +60,10 @@ estimateTV_IPTW <- function(
   randomization_probability <-
     ifelse("randomization_probability" %in% dots_names,
            dots$randomization_probability, 1)
-  compute_roots <- FALSE
-  # compute_roots <-
-  #   ifelse("compute_roots" %in% dots_names,
-  #          dots$compute_roots, FALSE)
+  # compute_roots <- FALSE
+  compute_roots <-
+    ifelse("compute_roots" %in% dots_names,
+           dots$compute_roots, FALSE)
   integrate_alphas <-
     ifelse("integrate_alphas" %in% dots_names,
            dots$integrate_alphas, TRUE)
@@ -299,6 +299,7 @@ estimateTV_IPTW <- function(
 
       keep_components = keep_components,
       compute_roots = compute_roots,
+      # roots = c(unlist(mu_alphas_ests))
       integrate_alphas =   integrate_alphas,
       deriv_control = deriv_control,
       contrast_type =   contrast_type

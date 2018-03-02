@@ -72,6 +72,13 @@ estimateVarianceCombined <- function(
 
     }
 
+  if (compute_roots){
+    roots <-  NULL
+    # root_control <-  geex::setup_root_control(start = theta_hat)
+  } else{
+    roots <- theta_hat
+    # root_control <- NULL
+  }
   average_treatment <-  mean(data[[var_names$treatment]])
 
   geex_args_alphas <- list(
@@ -80,7 +87,8 @@ estimateVarianceCombined <- function(
     data = data,
     units = var_names$grouping,
     compute_roots = compute_roots,
-    roots = theta_hat,
+    roots = roots,
+    # root_control = root_control,
     # root_control = setup_root_control(start = c(coef(trt_model_obj), 0)),
     # inner_args = list(
     #   weight_type = weight_type ### use hajek type here?
@@ -114,6 +122,12 @@ estimateVarianceCombined <- function(
   if (!is.null(deriv_control)){
     geex_args_alphas$deriv_control <- deriv_control
   }
+  if (compute_roots){
+    # roots <-  NULL
+    geex_args_alphas$root_control <-
+      geex::setup_root_control(start = theta_hat)
+  }
+  # message("about to geex")
 
   # saveRDS(geex_args_alpha, file = quickLookup("geex_args_alpha.Rds"))
   # saveRDS(geex_args_alpha, file = quickLookup("geex_args_alpha_glm_hajek2.Rds"))
@@ -241,7 +255,8 @@ eeFunCombined <- function(
 
       fixefs <- theta[(3*num_alphas)+(1:num_fixefs)]
       if ("glmerMod" %in% class(trt_model_obj) ) {
-        sigma <- theta[ (3*num_alphas) +num_fixefs]
+        sigma <- theta[ (3*num_alphas) +num_fixefs + 1]
+        stopifnot(sigma>0)
       } else
         if ( "lm" %in% class(trt_model_obj) ) {
           sigma <- NULL
