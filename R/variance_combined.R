@@ -185,6 +185,12 @@ estimateVarianceCombined <- function(
 #'   al. (2014) Biometrics
 #' @param integrate_alphas true
 #' @param average_treatment e.g. 0.37
+#' @param oracle_fixefs When \code{model_method=="Oracle"} then the oracle
+#'   values of fixed effects are passed through this argument. Default
+#'   \code{NULL}.
+#' @param oracle_sigma When \code{model_method=="Oracle"} then the oracle values
+#'   of the random effect component is passed through this argument. Default
+#'   \code{NULL}.
 #'
 #' @export
 eeFunCombined <- function(

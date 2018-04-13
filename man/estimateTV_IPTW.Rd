@@ -2,7 +2,7 @@
 % Please edit documentation in R/estimateTV_IPTW.R
 \name{estimateTV_IPTW}
 \alias{estimateTV_IPTW}
-\title{Estimate ATE with IPTW}
+\title{Stabilized IPTW Estimators for Causal Effects Assuming Partial Interference}
 \usage{
 estimateTV_IPTW(data, formula, alphas, weight_type = c("HT", "Hajek1",
   "Hajek2", "HT_TV")[3], model_method = c("glm", "glmer", "oracle")[2],
@@ -54,6 +54,14 @@ future).}
 \item{...}{additional args. See details.}
 }
 \description{
-Fits a parametric model and estimates ATE via IPTW with Wald-type confidence
-intervals from the empirical sandwich standard error estimates.
+This fits some of the IPW estimators introduced in Liu, Hudgens, and
+Becker-Dreps (2016) Biometrika. These estimators estimate causal effects in
+the presence of partial interference, with estimates of the asymptotic
+variance from standard M-estimation theory.
+}
+\details{
+Note that these estimators estimate different causal estimands than those in
+Tchetgen Tchetgen and VanderWeele (2012) SMMR that were applied in
+Perez-Heydrich et al. (2014) Biometrics and implemented with
+\code{\link[inferference]{interference}} by Saul and Hudgens (2017) JSS.
 }

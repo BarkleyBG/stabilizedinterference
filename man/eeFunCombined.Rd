@@ -65,6 +65,14 @@ in general target estimands different from those in Liu, Hudgens, and
 Becker-Dreps (2016) Biometrika.}
 
 \item{average_treatment}{e.g. 0.37}
+
+\item{oracle_fixefs}{When \code{model_method=="Oracle"} then the oracle
+values of fixed effects are passed through this argument. Default
+\code{NULL}.}
+
+\item{oracle_sigma}{When \code{model_method=="Oracle"} then the oracle values
+of the random effect component is passed through this argument. Default
+\code{NULL}.}
 }
 \description{
 This function is to be passed into geex::m_estimate

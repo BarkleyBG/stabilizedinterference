@@ -1,8 +1,15 @@
 
-#' Estimate ATE with IPTW
+#' Stabilized IPTW Estimators for Causal Effects Assuming Partial Interference
 #'
-#' Fits a parametric model and estimates ATE via IPTW with Wald-type confidence
-#' intervals from the empirical sandwich standard error estimates.
+#' This fits some of the IPW estimators introduced in Liu, Hudgens, and
+#' Becker-Dreps (2016) Biometrika. These estimators estimate causal effects in
+#' the presence of partial interference, with estimates of the asymptotic
+#' variance from standard M-estimation theory.
+#'
+#' Note that these estimators estimate different causal estimands than those in
+#' Tchetgen Tchetgen and VanderWeele (2012) SMMR that were applied in
+#' Perez-Heydrich et al. (2014) Biometrics and implemented with
+#' \code{\link[inferference]{interference}} by Saul and Hudgens (2017) JSS.
 #'
 #' @param formula Multi-part formula: \code{Outcome | Treatment ~
 #'   model_predictors | cluster_ID}. This will be coerced to object of type
@@ -53,7 +60,6 @@ estimateTV_IPTW <- function(
   model_options = list(nAGQ = 5, family = "binomial"),
   ...
 ){
-  # stop("take geex object out of the loop; save space!")
 
   dots <- list(...)
   dots_names <- names(dots)
@@ -141,11 +147,11 @@ estimateTV_IPTW <- function(
   grouping_vector <- data[[var_names$grouping]]
 
   if (!is.null(dots$todos)){
-    message("reorder groups in dataset")
+    message("reorder clusters in dataset")
     message("pass deriv options to geex")
   }
-  unique_groups <- unique(grouping_vector)
-  num_groups <- length(unique_groups)
+  unique_clusters <- unique(grouping_vector)
+  num_clusters <- length(unique_clusters)
 
   alphas <- sort(alphas)
   stopifnot(all(alphas>=0) & all(alphas<=1))
@@ -173,109 +179,28 @@ estimateTV_IPTW <- function(
   mu_alphas_ests <- list()
 
   ## Getting point estimates - - needs cleanup
-  for(alp_num in 1:num_alphas) {
-    alpha <- alphas[alp_num]
+
+  target_estimates <- estimateTargets(
+    alphas, num_alphas,
+    num_clusters, unique_clusters, grouping_vector,
+
+    treatment_vector,
+    ps_model_matrix,
+    outcome_vector,
+
+    fixefs,
+    sigma,
+
+    integrate_alphas,
+    randomization_probability,
+    weight_type
+  )
 
 
-    pi_ipw_vec <- rep(NA, num_groups)
-    summand_mat <- matrix(NA, ncol = 3, nrow = num_groups)
-    denom_mat <- matrix(NA, ncol = 3, nrow = num_groups)
-    # group_num <- 0
-    for (gg_num in 1:num_groups){
-      this_group <- unique_groups[gg_num]
-      group_indices <- (grouping_vector == this_group)
-      # group_num <- group_num
-      treatment <- treatment_vector[group_indices]
-      model_matrix <- ps_model_matrix[group_indices, , drop=FALSE]
-      outcome <- outcome_vector[group_indices]
-      ind_z1 <- treatment==1
-      ind_z0 <- treatment==0
 
-      pi_ipw  <- calcPiIPW(
-        treatment = treatment,
-        model_matrix = model_matrix,
-        # logit_integrand_fun,
-        fixefs = fixefs,
-        sigma = sigma, ## perhaps NULL
-        # participation = participation,
-        integrate_alphas = integrate_alphas,
-        randomization_probability = randomization_probability,
-        alpha = alpha
-      )
-      pi_ipw_vec[gg_num] <- pi_ipw
-
-
-      pi_ipw_Y <- outcome*pi_ipw
-
-      ## adjusting for pi(A_i_notj, alpha)
-      sum_y_ipw1 <- sum( pi_ipw_Y[ind_z1] )/alpha
-      sum_y_ipw0 <- sum( pi_ipw_Y[ind_z0] )/(1-alpha)
-
-      summand_mat[gg_num, ] <- c(
-        sum_y_ipw1, sum_y_ipw0, (alpha*sum_y_ipw1 + (1-alpha)*sum_y_ipw0)
-        )
-
-      # stop("lurking alpha in the pi term.  How to get rid of it?")
-      ## The conditional treatments are the sum times alpha
-
-    if (weight_type == "HT") {
-      denom_mat[gg_num, ] <- length(treatment)
-    } else
-      if (weight_type == "Hajek1") {
-        ## calculate individual prop scores
-        indiv_prop_scores_ipw <- rep(NA, length(treatment))
-
-        for (jj in 1:length(indiv_prop_scores_ipw)){
-          indiv_prop_scores_ipw[jj] <-
-            calcPiIPW(
-              treatment = treatment[jj],
-              model_matrix = model_matrix[jj, , drop = FALSE],
-              # logit_integrand_fun,
-              fixefs = fixefs,
-              sigma = sigma, ## perhaps NULL
-              # participation = participation[jj],
-              integrate_alphas = FALSE, ##ALPHA NOT USED HERE
-              randomization_probability = randomization_probability,
-              alpha = NULL
-              # alpha = treatment[jj]######alpha is not used in individual prop scores
-            )
-
-        }
-
-        sum_ipw_1 <- sum(indiv_prop_scores_ipw[ind_z1])
-        sum_ipw_0 <- sum(indiv_prop_scores_ipw[ind_z0])
-        denom_mat[gg_num, ] <- c(sum_ipw_1, sum_ipw_0, sum_ipw_1 + sum_ipw_0)
-
-      } else
-        if (weight_type == "Hajek2") {
-
-          sum_ipw_1 <- sum(ind_z1)*pi_ipw/alpha
-          sum_ipw_0 <- sum(ind_z0)*pi_ipw/(1-alpha)
-          # sum_ipw_1 <- sum(pi_ipw[ind_z1])
-          # sum_ipw_0 <- sum(pi_ipw[ind_z0])
-          denom_mat[gg_num, ] <-
-            c(sum_ipw_1, sum_ipw_0, alpha*sum_ipw_1 + (1-alpha)*sum_ipw_0)
-        } else {
-          stop("weight_type not recognized")
-        }
-    } ## looping over gg_num
-    stopifnot(!any(is.na(pi_ipw_vec)))
-    stopifnot(!any(is.na(denom_mat)))
-    stopifnot(!any(is.na(summand_mat)))
-
-    denom_vec <- colSums(denom_mat)
-    summand_vec <- colSums(summand_mat)
-    mu_ests_vec <- summand_vec / denom_vec
-
-    mu_alphas_ests[[alp_num]] <- mu_ests_vec
-    pi_ipw_alphas[[alp_num]] <- pi_ipw_vec
-
-    names(mu_alphas_ests)[alp_num] <- alpha
-    names(pi_ipw_alphas)[alp_num] <- alpha
-  } ## looping over alphas
-
-  cluster_propensity_scores <- pi_ipw_alphas
-  ## make a way to get out the raw CPS's
+    mu_alphas_ests <- target_estimates$mu_alphas_ests
+  pi_ipw_alphas <- target_estimates$pi_ipw_alphas
+  cluster_propensity_scores <- target_estimates$cluster_propensity_scores
 
 
   # if (model_method != "oracle") {
@@ -308,69 +233,7 @@ estimateTV_IPTW <- function(
 
     var_list <- do.call(estimateVarianceCombined, var_args)
     target_ests <- var_list$target_ests
-  # } else {
-  #
-  #     ## Prep for variance
-  #     var_args <- list(
-  #       alphas =   alphas,
-  #       num_alphas =   num_alphas,
-  #       mu_alphas_ests =   mu_alphas_ests,
-  #       data =   data,
-  #       num_fixefs =   num_fixefs,
-  #       fixefs =   fixefs,
-  #       sigma = sigma,
-  #       trt_model_obj = trt_model_obj,
-  #       var_names = var_names,
-  #       target_grids =   target_grids,
-  #       # pop_mean_alphas_list =   # pop_mean_alphas_list,
-  #       randomization_probability = randomization_probability,
-  #       weight_type = weight_type,
-  #       verbose = verbose,
-  #
-  #       keep_components = keep_components,
-  #       compute_roots = compute_roots,
-  #       integrate_alphas =   integrate_alphas,
-  #       deriv_control = deriv_control,
-  #       contrast_type =   contrast_type
-  #     )
-  #
-  #
-  #     var_list <- do.call(estimateVarianceCombined, var_args)
-  #     target_ests <- var_list$target_ests
-  #
-  # }
 
-  # saveRDS(var_args, file = quickLookup("var_args.Rds"))
-
-  # var_list <- do.call(estimateVarianceByAlpha, var_args)
-  # # var_list <- do.call(estimateVarianceCombined, var_args)
-  # target_ests <- var_list$target_ests
-  # pop_mean_alphas_list <- var_list$pop_mean_alphas_list
-  #
-  #
-  # #   target_grids,
-  # #   pop_mean_alphas_list,
-  # #   # num_alphas,
-  # #   contrast_type
-  # # )
-  #
-  # output <- list(
-  #   estimates = target_ests,
-  #   prop_scores = cluster_propensity_scores,
-  #   models = list(
-  #     propensity_model = trt_model_obj
-  #   ),
-  #   geex_obj_list = pop_mean_alphas_list,
-  #   misc = list(
-  #     randomization_probability = randomization_probability,
-  #     integrate_alphas = integrate_alphas,
-  #     contrast_type = contrast_type
-  #   ),
-  #   formulas = list(
-  #     full = formula,
-  #     model = modeling_formula
-  #   )
-  # )
 
   output <- list(
     estimates = target_ests,
@@ -396,4 +259,66 @@ estimateTV_IPTW <- function(
 
 
 
+# } else {
+#
+#     ## Prep for variance
+#     var_args <- list(
+#       alphas =   alphas,
+#       num_alphas =   num_alphas,
+#       mu_alphas_ests =   mu_alphas_ests,
+#       data =   data,
+#       num_fixefs =   num_fixefs,
+#       fixefs =   fixefs,
+#       sigma = sigma,
+#       trt_model_obj = trt_model_obj,
+#       var_names = var_names,
+#       target_grids =   target_grids,
+#       # pop_mean_alphas_list =   # pop_mean_alphas_list,
+#       randomization_probability = randomization_probability,
+#       weight_type = weight_type,
+#       verbose = verbose,
+#
+#       keep_components = keep_components,
+#       compute_roots = compute_roots,
+#       integrate_alphas =   integrate_alphas,
+#       deriv_control = deriv_control,
+#       contrast_type =   contrast_type
+#     )
+#
+#
+#     var_list <- do.call(estimateVarianceCombined, var_args)
+#     target_ests <- var_list$target_ests
+#
+# }
 
+# saveRDS(var_args, file = quickLookup("var_args.Rds"))
+
+# var_list <- do.call(estimateVarianceByAlpha, var_args)
+# # var_list <- do.call(estimateVarianceCombined, var_args)
+# target_ests <- var_list$target_ests
+# pop_mean_alphas_list <- var_list$pop_mean_alphas_list
+#
+#
+# #   target_grids,
+# #   pop_mean_alphas_list,
+# #   # num_alphas,
+# #   contrast_type
+# # )
+#
+# output <- list(
+#   estimates = target_ests,
+#   prop_scores = cluster_propensity_scores,
+#   models = list(
+#     propensity_model = trt_model_obj
+#   ),
+#   geex_obj_list = pop_mean_alphas_list,
+#   misc = list(
+#     randomization_probability = randomization_probability,
+#     integrate_alphas = integrate_alphas,
+#     contrast_type = contrast_type
+#   ),
+#   formulas = list(
+#     full = formula,
+#     model = modeling_formula
+#   )
+# )
