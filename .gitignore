@@ -3,3 +3,4 @@
 .RData
 .Ruserdata
 tests/testthat/historical_data/test_tidyTargets_glm.Rds
+scratch/
