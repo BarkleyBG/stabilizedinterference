@@ -1,7 +1,7 @@
-context("test_sapphire_hajek-r.R")
+context("test_prepareOracle2.R")
 
 test_that(
-  "sapphire-GMERT wont break",
+  "oracle with categorical predictors wont break",
   {
 
 
@@ -12,18 +12,7 @@ test_that(
 
     break_args$data <- break_args$data[1:100,]
     break_args$alphas <- 4:5/10
-    # expect_failure(
-    # zz <- do.call(estimateTV_IPTW,break_args)
 
-    # dput(coef(zz))
-    # list2 <- coef(zz)
-    # names(list2$beta) <- c(
-    #   "as.factor(node)3" , "as.factor(node)5" ,
-    #   "as.factor(node)6" , "as.factor(node)9" ,
-    #   "as.factor(node)10", "as.factor(node)11"
-    # )
-    # names(list2) <- c("fixefs", "var_comp")
-    #
     oracle_params <- structure(list(
       fixefs = structure(c(
         -2.39113592316612, -0.886830722442344, 0.938559317566697,
@@ -44,17 +33,19 @@ test_that(
       model_options = oracle_params,
       modeling_formula = Y~ -1 + as.factor(node)
     )
-    oracle_prep$will_it_work
+
+    expect_true(oracle_prep$will_it_work)
+
     break_args2$model_options <- oracle_prep$model_options
     break_args2$formula <- infection | Y ~ -1 + as.factor(node)   | gr
 
-    zz2 <- do.call(estimateTV_IPTW, break_args2)
+    test_run2 <- do.call(estimateTV_IPTW, break_args2)
 
     expect_true(
-      all(!is.na(zz2$estimates$std_error ))
+      all(!is.na(test_run2$estimates$std_error ))
     )
     expect_true(
-      all(!is.na(zz2$estimates$estimate ))
+      all(!is.na(test_run2$estimates$estimate ))
     )
 
 
