@@ -1,17 +1,21 @@
 
-#' Estimates the variance
+#' Estimates of the asymptotic variance of the estimators
 #'
-#' somethinhg
+#' These functions carry out the M-estimation procedures for the "sandwich"
+#' variance estimators
 #'
-#' @inheritParams estimateTV_IPTW
+#' @inheritParams estimateEffects
+#' @inheritParams estimateTargets
 #' @inheritParams getModel
-#' @param num_fixefs etc
+#' @inheritParams tidyTargetsCombined
+#' @inheritParams eeFunCombined
+#' @param mu_alphas_ests Point estimates of population mean target estimands
+#' @param num_fixefs The number of fixed effect parameters from treatment model
+#' @param deriv_control Optional for \code{\link[geex]{m_estimate}}
+#' @param verbose Optional argument from \code{\link{estimateEffects}}
+#' @param keep_components Optional argument from \code{\link{estimateEffects}}
+#' @param compute_roots Optional argument from \code{\link{estimateEffects}}
 #'
-#' asd
-#'
-#'
-#'
-#' etc
 estimateVarianceCombined <- function(
   alphas,
   num_alphas,
@@ -171,19 +175,15 @@ estimateVarianceCombined <- function(
 #'
 #' This function is to be passed into geex::m_estimate
 #'
-#' @inheritParams estimateTV_IPTW
-#' @inheritParams estimateVarianceCombined
+#' @inheritParams estimateEffects
+#' @inheritParams estimateTargets
 #' @inheritParams getModel
 #' @param num_fixefs Number of fixed effect parameters from treatment model.
 #'   Perhaps unncessaary coding.
-#' @param num_alphas Number of alphas. Perhaps unnecessary.
 #' @param var_names A list of names for outcome, treatment, clustering, and
 #'   perhaps participation.
-#' @param x_levels default NULL unless there are factos in design matrix. From
+#' @param x_levels Default NULL unless there are factos in design matrix. From
 #'   \code{\link[geex]{grab_design_levels}}.
-#' @param randomization_probability usually 1. e.g. 2/3  in Perez-Heydrich et
-#'   al. (2014) Biometrics
-#' @param integrate_alphas true
 #' @param average_treatment e.g. 0.37
 #' @param oracle_fixefs When \code{model_method=="Oracle"} then the oracle
 #'   values of fixed effects are passed through this argument. Default

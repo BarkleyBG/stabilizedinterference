@@ -22,7 +22,7 @@ liu_names <- c("alpha1", "trt1", "alpha2", "trt2", "estimate", "std_error",
 #   alphas <- 4:5/10
 #   my_formula <- Y | A ~ X1*X2 + (1|group) | group
 #
-#   glmer_fit <- estimateTV_IPTW(
+#   glmer_fit <- estimateEffects(
 #     data = data,
 #     formula = my_formula,
 #     alphas = alphas,
@@ -38,7 +38,7 @@ liu_names <- c("alpha1", "trt1", "alpha2", "trt2", "estimate", "std_error",
 #
 #   # debug(
 #   #
-#   glm_fit <- estimateTV_IPTW(
+#   glm_fit <- estimateEffects(
 #     data = data,
 #     formula = Y | A ~ X1*X2  | group,
 #     alphas = alphas,
@@ -73,7 +73,7 @@ test_that("integration HT-glm works",{
   my_seed <- 213
 
   set.seed(my_seed)
-  glm_fit1 <- estimateTV_IPTW(
+  glm_fit1 <- estimateEffects(
     data = data,
     formula = my_glm_formula,
     alphas = alphas,
@@ -193,7 +193,7 @@ test_that("integration HT-glm works",{
 #
 #   my_glmer_formula <- Y | A ~ X1*X2 + (1|group) | group
 #
-#   glmer_fit1 <- estimateTV_IPTW(
+#   glmer_fit1 <- estimateEffects(
 #     data = data,
 #     formula = my_glmer_formula,
 #     alphas = alphas,

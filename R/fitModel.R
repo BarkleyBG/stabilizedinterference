@@ -3,7 +3,7 @@
 #'
 #' Output of this function will be handled by \code{\link{getModel}}
 #'
-#' @inheritParams estimateTV_IPTW
+#' @inheritParams estimateEffects
 #' @param modeling_formula This is just the 'inner' part of the multi-part
 #'   formula for estimating treatment on predictors.
 #'
@@ -54,7 +54,7 @@ fitModel <- function(
 
 #' Grabs necessary information from a treatment model.
 #'
-#' @inheritParams estimateTV_IPTW
+#' @inheritParams estimateEffects
 #' @param trt_model_obj Fitted model object from \code{\link{fitModel}}
 #'
 #'  When \code{model_method = "oracle"} see \code{\link{prepareOracle}}.

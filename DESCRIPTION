@@ -1,7 +1,7 @@
 Package: stabilizedinterference
 Type: Package
 Title: Stabilized IPW Estimators for Causal Effects with Partial Interference
-Version: 0.0.2.9101
+Version: 0.0.2.9200
 Authors@R: c(
     person("Brian", "Barkley", email = "BarkleyBG@outlook.com", 
     role = c("cre", 'aut')))
@@ -10,7 +10,7 @@ Description: Implements the stabilized IPTW estimators for causal effects in
     Becker-Dreps (2016) Biometrika. These estimators are the Hajek-like analogue
     to the Horvitz-Thompson like estimators in Tchetgen Tchetgen and VanderWeele
     (2012) SMMR and Perez-Heydrich et al. (2014) Biometrics.
-License: GPL-3 + file LICENSE
+License: GPL-3
 Encoding: UTF-8
 LazyData: true
 Imports:

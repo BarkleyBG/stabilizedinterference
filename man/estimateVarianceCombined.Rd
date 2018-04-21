@@ -2,7 +2,7 @@
 % Please edit documentation in R/variance_combined.R
 \name{estimateVarianceCombined}
 \alias{estimateVarianceCombined}
-\title{Estimates the variance}
+\title{Estimates of the asymptotic variance of the estimators}
 \usage{
 estimateVarianceCombined(alphas, num_alphas, mu_alphas_ests, data, num_fixefs,
   fixefs, sigma, x_levels, trt_model_obj, var_names, target_grids,
@@ -28,15 +28,22 @@ estimateVarianceCombined(alphas, num_alphas, mu_alphas_ests, data, num_fixefs,
   \code{deriv_control} argument to \code{\link[geex]{m_estimate}} with
   \code{\link[geex]{setup_deriv_control}}. }}
 
+\item{num_alphas}{The number of allocation parameters}
+
+\item{mu_alphas_ests}{Point estimates of population mean target estimands}
+
 \item{data}{the dataframe. Will be coerced from "tbl_df" to data.frame.}
 
-\item{num_fixefs}{etc
+\item{num_fixefs}{The number of fixed effect parameters from treatment model}
 
-asd
+\item{fixefs}{The estimated values of the fixed effects parameters from the
+propensity score model}
 
+\item{sigma}{The estimated value of the (single) random effect variance
+component from the propensity score model}
 
-
-etc}
+\item{x_levels}{Default NULL unless there are factos in design matrix. From
+\code{\link[geex]{grab_design_levels}}.}
 
 \item{trt_model_obj}{Fitted model object from \code{\link{fitModel}}
 
@@ -49,6 +56,15 @@ etc}
  \item \code{x_levels}
  }}
 
+\item{var_names}{A list of names for outcome, treatment, clustering, and
+perhaps participation.}
+
+\item{target_grids}{output from \code{\link{makeTargetGrids}}}
+
+\item{randomization_probability}{Optional argument passed from
+\code{\link{estimateEffects}}. Usually 1. For example, 2/3  in
+Perez-Heydrich et al. (2014) Biometrics.}
+
 \item{weight_type}{Estimators as presented in Liu, Hudgens, and Becker-Dreps
 (2016) Biometrika. Select \code{"HT"} for unstabilized weights. Select
 \code{"Hajek1"} or \code{"Hajek2"} for stabilized weights. Select
@@ -56,7 +72,21 @@ etc}
 VanderWeele (2012) SMMR and Perez-Heydrich et al. (2014) Biometrics, which
 in general target estimands different from those in Liu, Hudgens, and
 Becker-Dreps (2016) Biometrika.}
+
+\item{verbose}{Optional argument from \code{\link{estimateEffects}}}
+
+\item{keep_components}{Optional argument from \code{\link{estimateEffects}}}
+
+\item{compute_roots}{Optional argument from \code{\link{estimateEffects}}}
+
+\item{integrate_alphas}{Optional argument passed from
+\code{\link{estimateEffects}}}
+
+\item{deriv_control}{Optional for \code{\link[geex]{m_estimate}}}
+
+\item{contrast_type}{e.g. "difference" or "negative risk ratio"}
 }
 \description{
-somethinhg
+These functions carry out the M-estimation procedures for the "sandwich"
+variance estimators
 }

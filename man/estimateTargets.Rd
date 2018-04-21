@@ -49,6 +49,13 @@ propensity score model}
 \item{sigma}{The estimated value of the (single) random effect variance
 component from the propensity score model}
 
+\item{integrate_alphas}{Optional argument passed from
+\code{\link{estimateEffects}}}
+
+\item{randomization_probability}{Optional argument passed from
+\code{\link{estimateEffects}}. Usually 1. For example, 2/3  in
+Perez-Heydrich et al. (2014) Biometrics.}
+
 \item{weight_type}{Estimators as presented in Liu, Hudgens, and Becker-Dreps
 (2016) Biometrika. Select \code{"HT"} for unstabilized weights. Select
 \code{"Hajek1"} or \code{"Hajek2"} for stabilized weights. Select

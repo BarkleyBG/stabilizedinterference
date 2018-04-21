@@ -12,4 +12,7 @@ These estimators estimate causal effects in the presence of *partial* or
 *clustered* interference, with estimates of the asymptotic variance from
 standard M-estimation theory.
 
+IPW estimators are implemented in the function `estimateEffects()`
+
 This package is in working order, but currently under development.
+Suggestions are welcome; thanks for your patience\!

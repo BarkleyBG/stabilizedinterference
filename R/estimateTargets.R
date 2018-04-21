@@ -3,7 +3,7 @@
 #'
 #' This function calculates the estimated values in a direct plug-in method.
 #'
-#' @inheritParams estimateTV_IPTW
+#' @inheritParams estimateEffects
 #' @param num_alphas The number of allocation parameters
 #' @param num_clusters The number of unique clusters (i.e., i.i.d. sample units)
 #' @param unique_clusters The ID values for the unique clusters
@@ -17,6 +17,11 @@
 #'   propensity score model
 #' @param sigma The estimated value of the (single) random effect variance
 #'   component from the propensity score model
+#' @param randomization_probability Optional argument passed from
+#'   \code{\link{estimateEffects}}. Usually 1. For example, 2/3  in
+#'   Perez-Heydrich et al. (2014) Biometrics.
+#' @param integrate_alphas Optional argument passed from
+#'   \code{\link{estimateEffects}}
 #'
 estimateTargets <- function(
   alphas, num_alphas,

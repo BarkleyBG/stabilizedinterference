@@ -39,7 +39,7 @@ test_that(
     break_args2$model_options <- oracle_prep$model_options
     break_args2$formula <- infection | Y ~ -1 + as.factor(node)   | gr
 
-    test_run2 <- do.call(estimateTV_IPTW, break_args2)
+    test_run2 <- do.call(estimateEffects, break_args2)
 
     expect_true(
       all(!is.na(test_run2$estimates$std_error ))

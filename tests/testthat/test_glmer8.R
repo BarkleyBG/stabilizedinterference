@@ -11,7 +11,7 @@ test_that(
     glmer8_args$data <- glmer8_args$data[1:100,]
     glmer8_args$verbose <- FALSE
     expect_silent(
-      foo <- do.call(estimateTV_IPTW, glmer8_args)
+      foo <- do.call(estimateEffects, glmer8_args)
     )
     # glmer8_args$data <- glmer8_args$data[1:100,]
     #
@@ -20,7 +20,7 @@ test_that(
 #
     set.seed(33)
     expect_silent(
-      foo <- do.call(estimateTV_IPTW, glmer8_args)
+      foo <- do.call(estimateEffects, glmer8_args)
     )
     library(inferference)
     set.seed(33)

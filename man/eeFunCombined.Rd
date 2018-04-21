@@ -46,15 +46,17 @@ perhaps participation.}
   \code{deriv_control} argument to \code{\link[geex]{m_estimate}} with
   \code{\link[geex]{setup_deriv_control}}. }}
 
-\item{num_alphas}{Number of alphas. Perhaps unnecessary.}
+\item{num_alphas}{The number of allocation parameters}
 
-\item{x_levels}{default NULL unless there are factos in design matrix. From
+\item{x_levels}{Default NULL unless there are factos in design matrix. From
 \code{\link[geex]{grab_design_levels}}.}
 
-\item{integrate_alphas}{true}
+\item{integrate_alphas}{Optional argument passed from
+\code{\link{estimateEffects}}}
 
-\item{randomization_probability}{usually 1. e.g. 2/3  in Perez-Heydrich et
-al. (2014) Biometrics}
+\item{randomization_probability}{Optional argument passed from
+\code{\link{estimateEffects}}. Usually 1. For example, 2/3  in
+Perez-Heydrich et al. (2014) Biometrics.}
 
 \item{weight_type}{Estimators as presented in Liu, Hudgens, and Becker-Dreps
 (2016) Biometrika. Select \code{"HT"} for unstabilized weights. Select

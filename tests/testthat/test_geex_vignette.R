@@ -81,7 +81,7 @@ test_that(
 
 
     set.seed(my_seed)
-    glm_fit1 <- estimateTV_IPTW(
+    glm_fit1 <- estimateEffects(
       data = data,
       formula = my_glm_formula,
       alphas = allocations[1:2],
@@ -352,7 +352,7 @@ test_that(
 
 
     set.seed(my_seed)
-    glm_fit1 <- estimateTV_IPTW(
+    glm_fit1 <- estimateEffects(
       data = data,
       formula = my_glm_formula,
       alphas = allocations,

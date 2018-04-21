@@ -3,7 +3,7 @@
 \name{prepareOracle}
 \alias{prepareOracle}
 \title{A helper function for using oracle estimates for
-\code{\link{estimateTV_IPTW}}.}
+\code{\link{estimateEffects}}.}
 \usage{
 prepareOracle(data, model_options, modeling_formula)
 }
@@ -16,7 +16,7 @@ future).}
 \item{modeling_formula}{see \code{\link{fitModel}}
 
 This function checks whether the oracle parameters passed through
-\code{model_options} to \code{\link{estimateTV_IPTW}} are in appropriate
+\code{model_options} to \code{\link{estimateEffects}} are in appropriate
 order. User should supply only the formula that would be
   used to model treatment on predictors. See Details for how to use with
   random effect models and \code{\link[lme4]{glmer}}.
@@ -46,5 +46,5 @@ A list of elements, perhaps including \itemize{
 }
 \description{
 A helper function for using oracle estimates for
-\code{\link{estimateTV_IPTW}}.
+\code{\link{estimateEffects}}.
 }

@@ -51,7 +51,7 @@
 #'
 #'
 #' @export
-estimateTV_IPTW <- function(
+estimateEffects <- function(
   data,
   formula,
   alphas,

@@ -1,13 +1,13 @@
 
 #' A helper function for using oracle estimates for
-#' \code{\link{estimateTV_IPTW}}.
+#' \code{\link{estimateEffects}}.
 #'
-#' @inheritParams estimateTV_IPTW
+#' @inheritParams estimateEffects
 #' @inheritParams fitModel
 #' @param modeling_formula see \code{\link{fitModel}}
 #'
 #' This function checks whether the oracle parameters passed through
-#' \code{model_options} to \code{\link{estimateTV_IPTW}} are in appropriate
+#' \code{model_options} to \code{\link{estimateEffects}} are in appropriate
 #' order. User should supply only the formula that would be
 #'   used to model treatment on predictors. See Details for how to use with
 #'   random effect models and \code{\link[lme4]{glmer}}.
@@ -130,7 +130,7 @@ prepareOracle <- function(
 
 
 ## #' @param multipart_formula. Optional. User can supply the multi-part
-## #'   formula as in \code{\link{estimateTV_IPTW}}.
+## #'   formula as in \code{\link{estimateEffects}}.
 ## #' \item \code{names_matrix_multipart}: the colnames of the model matrix when \code{multipart_formula} is provided.
 ## #' \item \code{head_matrix_multipart}: the \code{\link[utils]{head}} of the model matrix when \code{multipart_formula} is provided.
 ##

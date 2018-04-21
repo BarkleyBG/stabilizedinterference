@@ -32,7 +32,7 @@ a list of pop_means and effects grids
 }
 \description{
 This function can be called prior to and then passed into
-\code{\link{estimateTV_IPTW}} informally by specifying \code{target_grids =
+\code{\link{estimateEffects}} informally by specifying \code{target_grids =
 makeTargetGrids(alphas = c(0.4,0.5))} via the \code{\link{...}} argument.
 }
 \seealso{

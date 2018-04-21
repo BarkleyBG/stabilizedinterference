@@ -9,7 +9,6 @@ trtIdx <- function(trt){
 #' Take geex'd variance output and turn it into a tidy grid of target estimates
 #'
 #' @inheritParams getContrastVals
-#' @param pop_mean_alphas_list looped geex output
 #' @param target_grids output from \code{\link{makeTargetGrids}}
 #' @param alpha_grid estimates and variance estimates for the pop means
 #' @param geex_output from \code{\link[geex]{m_estimate}}.

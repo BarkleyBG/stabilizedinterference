@@ -128,7 +128,7 @@ estimateVarianceByAlpha <- function(
 #'
 #' This function is to be passed into geex::m_estimate
 #'
-#' @inheritParams estimateTV_IPTW
+#' @inheritParams estimateEffects
 #' @param alpha One of the allocations at a time
 #' @param num_fixefs Number of fixed effect parameters from treatment model.
 #'   Perhaps unncessaary coding.
