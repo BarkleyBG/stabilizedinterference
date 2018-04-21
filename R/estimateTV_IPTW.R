@@ -175,8 +175,6 @@ estimateTV_IPTW <- function(
   num_fixefs <- length(fixefs)
   num_alphas <- length(alphas)
 
-  pi_ipw_alphas <- list()
-  mu_alphas_ests <- list()
 
   ## Getting point estimates - - needs cleanup
 
@@ -198,7 +196,7 @@ estimateTV_IPTW <- function(
 
 
 
-    mu_alphas_ests <- target_estimates$mu_alphas_ests
+  mu_alphas_ests <- target_estimates$mu_alphas_ests
   pi_ipw_alphas <- target_estimates$pi_ipw_alphas
   cluster_propensity_scores <- target_estimates$cluster_propensity_scores
 

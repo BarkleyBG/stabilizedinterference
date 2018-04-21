@@ -33,6 +33,10 @@ estimateTargets <- function(
   randomization_probability,
   weight_type
 ){
+
+  pi_ipw_alphas <- list()
+  mu_alphas_ests <- list()
+
   for(alp_num in 1:num_alphas) {
     alpha <- alphas[alp_num]
 
